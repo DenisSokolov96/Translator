@@ -10,7 +10,7 @@ namespace Translator
     class Lexical_Analysis
     {
         /*---------------------------------------------------*/
-        возможно надо завести еще одну для типа данных!!!!!!!!!!!!!!!!!!!!!
+        //возможно надо завести еще одну для типа данных!!!!!!!!!!!!!!!!!!!!! начать с этого
         Dictionary<string, string> tableId = new Dictionary<string, string>();
         Dictionary<string, string> lexems = new Dictionary<string, string>();
         //private int Number_func = -1;
