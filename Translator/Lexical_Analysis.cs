@@ -156,11 +156,11 @@ namespace Translator
                             switch (checkRezer(ident))
                             {
                                 case "id": {
-                                        listStr.Add(new string[] { "id" + listStr.Count.ToString(), ident, readToEnd(i, str), "0" });
+                                        listStr.Add(new string[] { "id" + listStr.Count.ToString(), ident, idReadToEnd(in i, str), "0" });
                                         i = str.Length;
                                     } break;
                                 case "rw": {
-                                        listStr.Add(new string[] { ident, readToEnd(i, str) });
+                                        listStr.Add(new string[] { ident, rwReadToEnd(ref i, str) });
                                         i = str.Length;
                                     } break;
                                 case "con": {                                       
@@ -190,14 +190,14 @@ namespace Translator
             return "null";
         }
 
-        //дочитать до конца строку
-        private string readToEnd(int i, string str)
+        //дочитать до конца строку идентификатора
+        private string idReadToEnd(in int i, string str)
         {
             string perem = "";
             bool flag = false;
             for (int j = i; j < str.Length; j++)
             {
-                if ((str[j] != ' ') && (str[j] != ';') && (str[j] != ':')) { perem += str[j]; flag = true; }
+                if ((str[j] != '\t') && (str[j] != ' ') && (str[j] != ';') && (str[j] != ':')) { perem += str[j]; flag = true; }
                 else if (flag)
                 {
                     //надо дочитать до конца и выдать ошибку если найден любой символ кроме пробела
@@ -216,12 +216,53 @@ namespace Translator
                 }
             }
             return perem;
-
         }
 
-        private void addMatr(string type, string perem, string zn)
+        //дочитать до конца строку ввода/вывода
+        private string rwReadToEnd(ref int i, string str)
         {
+            string perem = "";
+            bool flag = false;
+            int rez = i;
 
+            int t = Check_Scob2(str,0);
+            if (t != 0)
+            {
+                Form1.Str_Write += "Нарушение скобочной структуры!\n";
+                return null;
+            }
+
+            while ((i + 1 < str.Length) && (str[i] != '"')) i++;
+            if (i + 1 < str.Length) i++;//чтобы взять следующий символ
+            else {
+                i = rez;
+                while ((i + 1 < str.Length) && (str[i] != '(')) i++;
+                if (i + 1 < str.Length) i++;//чтобы взять следующий символ
+            }
+
+            for (int j = i; j < str.Length; j++)
+            {        
+                if ((str[j] != '"') && (str[j] != ')')) { perem += str[j]; flag = true; }
+                else if (flag)
+                {
+                    //надо дочитать до конца и выдать ошибку если найден ');'
+                    flag = false;
+                    j++;
+                    while (j < str.Length)
+                    {
+                        if (str[j] != ')')
+                        {
+                            while (j < str.Length)
+                            {
+                                if (str[j] != ';') j = str.Length;
+                                j++;
+                            }
+                        }
+                        j++;
+                    }
+                }
+            }
+            return perem;
         }
     }
 }
