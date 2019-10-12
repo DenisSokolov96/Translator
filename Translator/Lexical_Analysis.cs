@@ -10,11 +10,13 @@ namespace Translator
     class Lexical_Analysis
     {
         /*---------------------------------------------------*/
-        //возможно надо завести еще одну для типа данных!!!!!!!!!!!!!!!!!!!!! начать с этого
-        Dictionary<string, string> tableId = new Dictionary<string, string>();
-        Dictionary<string, string> lexems = new Dictionary<string, string>();
+        /* Информация для хранения разобраных токенов
+         * [Программа][имя программы] - для название программы
+         * [id№][тип][имя переменной][значение] - для переменных
+         * [вывод/читать][указать то что выводим/в какую пременную считываем] - для вывода/ввода на экран         
+         */
+        List<string[]> listStr = new List<string[]>();
         //private int Number_func = -1;
-        private int countId = 0;
         //списки для резервированных слов
         List<string> identPeremen = new List<string>() { "цп", "сп", "бп", "дп" };
         List<string> identReadWrite = new List<string>() { "вывод", "читать" };
@@ -65,9 +67,7 @@ namespace Translator
                 string str = "";
                 for (int i = 9; i < str_name.Length - 1; i++)
                     if (str_name[i].ToString() != " ") str += str_name[i];
-                tableId.Add("Программа", str);
-                lexems.Add("id" + countId.ToString(), "Программа");
-                countId++;
+                listStr.Add(new string[] { "Программа", str });
                 return 1;
             };
         }
@@ -145,21 +145,28 @@ namespace Translator
                 bool flag = false;
                 for (int i = 0; i < str.Length; i++)
                 {
-                    if ((str[i] != '\t') && (str[i] != ' ') && (str[i] != ':') && (str[i] != '(') && (str[i] != ')') && (str[i] != '{') && (str[i] != '}')) { ident += str[i]; flag = true; }
+                    if ( ((str[i] >='А') && (str[i] <= 'Я')) || ((str[i] >= 'a') && (str[i] <= 'я')) ) { ident += str[i]; flag = true; }
                     else
                     {
                         if (flag)
                         {
                             flag = false;
-                            Form1.Str_Write += ident + "\n";
                             //определяем что считали, если это идентификатор переменной, то ее надо создать
                             //или проверить что она уже создана
                             switch (checkRezer(ident))
                             {
-                                case "id": { readToEnd(i, str); i = str.Length; } break;
-                                case "rw": { } break;
-                                case "con": { } break;
-                                case "null": { } break;
+                                case "id": {
+                                        listStr.Add(new string[] { "id" + listStr.Count.ToString(), ident, readToEnd(i, str), "0" });
+                                        i = str.Length;
+                                    } break;
+                                case "rw": {
+                                        listStr.Add(new string[] { ident, readToEnd(i, str) });
+                                        i = str.Length;
+                                    } break;
+                                case "con": {                                       
+                                    } break;
+                                case "null": {
+                                    } break;
                             }
                             ident = "";
                         }
@@ -184,7 +191,7 @@ namespace Translator
         }
 
         //дочитать до конца строку
-        private void readToEnd(int i, string str)
+        private string readToEnd(int i, string str)
         {
             string perem = "";
             bool flag = false;
@@ -194,10 +201,7 @@ namespace Translator
                 else if (flag)
                 {
                     //надо дочитать до конца и выдать ошибку если найден любой символ кроме пробела
-                    flag = false;
-                    tableId.Add(perem, "0");
-                    lexems.Add("id" + countId.ToString(), perem);
-                    countId++;
+                    flag = false;                                     
                     j++;
                     while (j < str.Length)
                     {
@@ -211,6 +215,12 @@ namespace Translator
                     }
                 }
             }
+            return perem;
+
+        }
+
+        private void addMatr(string type, string perem, string zn)
+        {
 
         }
     }

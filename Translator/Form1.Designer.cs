@@ -35,6 +35,7 @@
             this.выполнитьToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.сохранитьФайлToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.открытьToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.очиститьИнформациюToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.richTextBox2 = new System.Windows.Forms.RichTextBox();
             this.richTextBox3 = new System.Windows.Forms.RichTextBox();
             this.richTextBox4 = new System.Windows.Forms.RichTextBox();
@@ -43,7 +44,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.очиститьИнформациюToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -103,6 +103,13 @@
             this.открытьToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
             this.открытьToolStripMenuItem.Text = "Открыть файл (Ctrl+O)";
             this.открытьToolStripMenuItem.Click += new System.EventHandler(this.открытьToolStripMenuItem_Click);
+            // 
+            // очиститьИнформациюToolStripMenuItem
+            // 
+            this.очиститьИнформациюToolStripMenuItem.Name = "очиститьИнформациюToolStripMenuItem";
+            this.очиститьИнформациюToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.очиститьИнформациюToolStripMenuItem.Text = "Очистить поле (инф.)";
+            this.очиститьИнформациюToolStripMenuItem.Click += new System.EventHandler(this.очиститьИнформациюToolStripMenuItem_Click);
             // 
             // richTextBox2
             // 
@@ -168,13 +175,6 @@
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
-            // 
-            // очиститьИнформациюToolStripMenuItem
-            // 
-            this.очиститьИнформациюToolStripMenuItem.Name = "очиститьИнформациюToolStripMenuItem";
-            this.очиститьИнформациюToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
-            this.очиститьИнформациюToolStripMenuItem.Text = "Очистить поле (инф.)";
-            this.очиститьИнформациюToolStripMenuItem.Click += new System.EventHandler(this.очиститьИнформациюToolStripMenuItem_Click);
             // 
             // Form1
             // 
