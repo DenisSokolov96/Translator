@@ -37,7 +37,7 @@ namespace Translator
                 {
                     if (Read_Str_Func(Text) == 1)
                     {
-                        Form1.Str_Write += "Главная функция прочитана успешно.\n";                       
+                        Form1.Str_Write += "Лексический анализ выполнен.\n";                       
                     }
 
                 }
@@ -219,7 +219,7 @@ namespace Translator
         }
 
         //дочитать до конца строку ввода/вывода
-        private string rwReadToEnd(ref int i, string str)
+        private string rwReadToEnd(ref int i, string str )
         {
             string perem = "";
             bool flag = false;
@@ -242,7 +242,7 @@ namespace Translator
 
             for (int j = i; j < str.Length; j++)
             {        
-                if ((str[j] != '"') && (str[j] != ')')) { perem += str[j]; flag = true; }
+                if ((str[j] != '"') && (str[j] != '\n') && (str[j] != ';')) { perem += str[j]; flag = true; }
                 else if (flag)
                 {
                     //надо дочитать до конца и выдать ошибку если найден ');'
@@ -262,7 +262,14 @@ namespace Translator
                     }
                 }
             }
-            return perem;
+            str = "";
+            for (int j = perem.Length - 1; j >= 0; j--)
+                if (perem[j] != ')') str += perem[j];
+                else { j = -1; str += ')'; }
+            if ((perem.Length - str.Length) != 0)
+                return perem.Substring(0, perem.Length - str.Length);
+            else return perem;
+
         }
     }
 }
