@@ -10,10 +10,11 @@ namespace Translator
     class Lexical_Analysis
     {
         /*---------------------------------------------------*/
-        /* Информация для хранения разобраных токенов
+        /* Информация для хранения разобраных лексем
          * [Программа][имя программы] - для название программы
          * [id№][тип][имя переменной][значение] - для переменных
-         * [вывод/читать][указать то что выводим/в какую пременную считываем] - для вывода/ввода на экран         
+         * [вывод/читать][указать то что выводим/в какую пременную считываем] - для вывода/ввода на экран  
+         * [резервированное слово][условие/действие] - для условий
          */
         List<string[]> listStr = new List<string[]>();
         //private int Number_func = -1;
@@ -21,7 +22,7 @@ namespace Translator
         List<string> identPeremen = new List<string>() { "цп", "сп", "бп", "дп" };
         List<string> identReadWrite = new List<string>() { "вывод", "читать" };
         List<string> identCondition = new List<string>() { "Если", "то", "иначе" };
-        string[,] matTokens = new string[50, 10];
+        List<string[]> listToken = new List<string[]>();
         /*---------------------------------------------------*/
 
 
@@ -37,7 +38,28 @@ namespace Translator
                 {
                     if (Read_Str_Func(Text) == 1)
                     {
-                        Form1.Str_Write += "Лексический анализ выполнен.\n";                       
+                        //запись в токен
+                        if (getMasToken())
+                        {
+                            Form1.Str_Write += "\nЛексический анализ (вывод токенов).\n";
+                            Form1.Str_Write += "/********************************/\n";
+                            //вывод токенов на экран
+                            foreach (string[] str in listToken)
+                            {
+                                for (int i = 0; i < str.Length; i++)
+                                    if (str[i] == "id")
+                                    {
+                                        Form1.Str_Write += "(" + str[i] + ", " + str[i + 1] + ") ";
+                                        i++;
+                                    }
+                                    else Form1.Str_Write += str[i] + " ";
+                                Form1.Str_Write += "\n";
+                            }
+                            Form1.Str_Write += "/********************************/\n";
+                            Form1.Str_Write += "Лексический анализ выполнен.\n\n";
+                        }
+                        else Form1.Str_Write += "Ощибка получения токенов.\n";
+
                     }
 
                 }
@@ -156,14 +178,16 @@ namespace Translator
                             switch (checkRezer(ident))
                             {
                                 case "id": {
-                                        listStr.Add(new string[] { "id" + listStr.Count.ToString(), ident, idReadToEnd(in i, str), "0" });
+                                        listStr.Add(new string[] { "id", ident, idReadToEnd(in i, str), "0" });
                                         i = str.Length;
                                     } break;
                                 case "rw": {
                                         listStr.Add(new string[] { ident, rwReadToEnd(ref i, str) });
                                         i = str.Length;
                                     } break;
-                                case "con": {                                       
+                                case "con": {
+                                        listStr.Add(new string[] { ident, conReadToEnd(i, str, ref ident) });
+                                        i = str.Length;
                                     } break;
                                 case "null": {
                                     } break;
@@ -183,9 +207,9 @@ namespace Translator
         //проверка типа резервированного слова
         private string checkRezer(string str)
         {
-            if (identPeremen.Contains(str)) return "id";
-            if (identReadWrite.Contains(str)) return "rw";
             if (identCondition.Contains(str)) return "con";
+            if (identPeremen.Contains(str)) return "id";
+            if (identReadWrite.Contains(str)) return "rw";            
 
             return "null";
         }
@@ -269,6 +293,64 @@ namespace Translator
             if ((perem.Length - str.Length) != 0)
                 return perem.Substring(0, perem.Length - str.Length);
             else return perem;
+
+        }
+        //дочитать до конца строку условие
+        //номер для дальнейшего считывания, вся строка и начало строки
+        private string conReadToEnd(int i, string str, ref string ident)
+        {
+            string perem = "";
+            if (ident == "Если")
+            {
+                for (; i < str.Length && str[i] == ' '; i++) { }                                              
+
+                for (int j = i; j < str.Length && str[j]!='\n' ; j++)
+                {
+                    perem += str[j];
+                }
+                return perem;
+            }
+            else {
+                for (; i < str.Length && str[i] == ' '; i++) { }
+
+                for (int j = i; j < str.Length && str[j] != '\n'; j++)
+                {
+                    perem += str[j];
+                }
+                return perem;
+            }               
+        }
+
+        private bool getMasToken()
+        {
+            bool result = false;
+            int i = 0;
+
+            foreach (string[] str in listStr)
+            {
+                switch(str[0])
+                {
+                    case "id": {                          
+                            listToken.Add(new string[] { "id" , i.ToString(), "=", str[3] });
+                        } break;
+                    case "вывод":{
+                            listToken.Add(new string[] { str[0], str[1]});
+                        } break;
+                    case "читать":{
+                            listToken.Add(new string[] { str[0], str[1] });
+                        } break;
+                }
+                i++;
+            }
+            result = true;              
+            
+
+            return result;
+        }
+
+        //метод для замены идентификаторов на обозначение (возможно это лишнее)
+        private void changeIdent()
+        {
 
         }
     }
