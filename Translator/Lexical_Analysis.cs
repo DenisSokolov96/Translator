@@ -17,11 +17,11 @@ namespace Translator
          * [резервированное слово][условие/действие] - для условий
          */
         List<string[]> listStr = new List<string[]>();
-        //private int Number_func = -1;
         //списки для резервированных слов
         List<string> identPeremen = new List<string>() { "цп", "сп", "бп", "дп" };
         List<string> identReadWrite = new List<string>() { "вывод", "читать" };
         List<string> identCondition = new List<string>() { "Если", "то", "иначе" };
+        //список для хранения токенов
         List<string[]> listToken = new List<string[]>();
         /*---------------------------------------------------*/
 
@@ -47,12 +47,27 @@ namespace Translator
                             foreach (string[] str in listToken)
                             {
                                 for (int i = 0; i < str.Length; i++)
-                                    if (str[i] == "id")
+                                    switch(str[i])
                                     {
-                                        Form1.Str_Write += "(" + str[i] + ", " + str[i + 1] + ") ";
-                                        i++;
+                                        case "id":{
+                                                Form1.Str_Write += "(" + str[i] + ", " + str[i + 1] + ") ";
+                                                i++; 
+                                              }break;
+                                        case "читать":
+                                            {
+                                                Form1.Str_Write +=str[i] + " (" + str[i + 1] + ", " + str[i + 2] + ") ";
+                                                i = str.Length;
+                                            }
+                                            break;
+                                        case "вывод":
+                                            {
+                                                Form1.Str_Write += str[i] + " ( " + str[i + 1] + " ) ";
+                                                i = str.Length;
+                                            }
+                                            break;
+                                        default: { Form1.Str_Write += str[i] + " "; } break;
                                     }
-                                    else Form1.Str_Write += str[i] + " ";
+                                   
                                 Form1.Str_Write += "\n";
                             }
                             Form1.Str_Write += "/********************************/\n";
@@ -333,11 +348,11 @@ namespace Translator
                     case "id": {                          
                             listToken.Add(new string[] { "id" , i.ToString(), "=", str[3] });
                         } break;
-                    case "вывод":{
+                    case "вывод":{                            
                             listToken.Add(new string[] { str[0], str[1]});
                         } break;
-                    case "читать":{
-                            listToken.Add(new string[] { str[0], str[1] });
+                    case "читать":{                            
+                            listToken.Add(new string[] { str[0], "id", changeIdent(str[1]) });
                         } break;
                 }
                 i++;
@@ -349,9 +364,19 @@ namespace Translator
         }
 
         //метод для замены идентификаторов на обозначение (возможно это лишнее)
-        private void changeIdent()
+        private string changeIdent(string s)
         {
-
+            int j = 0;
+            foreach (string[] str in listStr)
+            {
+                for (int i = 0; i < str.Length; i++)
+                    if (str[i] == s) {
+                        return j.ToString();
+                    }
+                j++;
+            }
+            Form1.Str_Write += "Переменная не объявлена!\n";
+            return null;
         }
     }
 }
