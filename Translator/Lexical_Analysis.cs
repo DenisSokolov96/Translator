@@ -18,9 +18,11 @@ namespace Translator
          */
         List<string[]> listStr = new List<string[]>();
         //списки для резервированных слов
-        List<string> identPeremen = new List<string>() { "цп", "сп", "бп", "дп" };
+        List<string> identPeremen = new List<string>() { "цп", "сп", "лп", "дп" };
         List<string> identReadWrite = new List<string>() { "вывод", "читать" };
         List<string> identCondition = new List<string>() { "Если", "то", "иначе" };
+        List<string> identFor = new List<string>() { "для", "до", "{" ,"}"};
+        List<string> identWhile = new List<string>() { "пока", "(", ")", "{", "}" };
         //список для хранения токенов
         List<string[]> listToken = new List<string[]>();
         /*---------------------------------------------------*/
@@ -177,10 +179,11 @@ namespace Translator
         private int Read_Str_Func(string[] Text)
         {
             foreach (string str in Text)
-            {
-                string ident = "";
-                bool flag = false;
-                for (int i = 0; i < str.Length; i++)
+            {                
+                if (!recognition(str)) Form1.Str_Write += "Ошибка в строке: { " + str +" } \n";
+
+
+                /*for (int i = 0; i < str.Length; i++)
                 {
                     if ( ((str[i] >='А') && (str[i] <= 'Я')) || ((str[i] >= 'a') && (str[i] <= 'я')) ) { ident += str[i]; flag = true; }
                     else
@@ -210,13 +213,75 @@ namespace Translator
                             ident = "";
                         }
                     }
-                }
-                ident = "";
-
-
+                }*/
             }
 
             return 1;
+        }
+        private bool recognition(string str)
+        {
+            for (int i = 0; i < identPeremen.Count; i++)
+            {
+                try
+                {
+                    Regex regex = new Regex(identPeremen[i] + @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(=(\s)*(-)?([0-9])+(\s)*(;))");
+                    MatchCollection matches = regex.Matches(str);
+                    Regex regex2 = new Regex(identPeremen[i] + @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(;)");
+                    MatchCollection matches2 = regex2.Matches(str);
+                    if ((matches.Count > 0)||(matches2.Count > 0))
+                    {
+                        //получаем тип своей переменной
+                        regex = new Regex(identPeremen[i]);
+                        matches = regex.Matches(str);
+                        string ident = matches[0].ToString();
+
+                        //получаем имя своей переменной
+                        regex = new Regex(@":(\s)*([А-Я]||[а-я])(\w)");
+                        matches = regex.Matches(str);
+                        string name = matches[0].ToString();
+                        string sname = "";
+                        for (int j = 0; j < name.Length; j++)
+                            if ((name[j] != '\t') && (name[j] != ' ') && (name[j] != ':')) sname += name[j];
+                            else if (sname.Length != 0) break;
+
+                        //получаем значение своей переменной
+                        switch (ident)
+                        {
+                            case "цп":
+                                {
+                                    regex = new Regex(@"=(\s)*(-)?([0-9])*(\s)*(;)");
+                                    matches = regex.Matches(str);
+                                    if (matches.Count > 0)
+                                    {
+                                        string s1 = matches[0].ToString();
+                                        string s2 = "";
+                                        for (int j = 0; j < s1.Length; j++)
+                                            if ((s1[j] != '\t') && (s1[j] != ' ') && (s1[j] != '=') && (s1[j] != ':')) s2 += s1[j];
+                                            else if (s2.Length != 0) break;
+                                        if (s2 != "")
+                                        {
+                                            listStr.Add(new string[] { "id", ident, sname, s2 });
+                                            return true;
+                                        }
+                                    }
+                                }
+                                break;
+                        }
+
+
+                        if (matches.Count == 0)
+                        {
+                            listStr.Add(new string[] { "id", ident, sname, "0" });
+                            return true;
+                        }
+
+                    }                   
+                }
+                catch { }
+                
+            }
+
+            return false;
         }
 
         //проверка типа резервированного слова
