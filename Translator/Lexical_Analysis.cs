@@ -191,20 +191,22 @@ namespace Translator
             return 1;
         }
 
+        //поиск обьявления переменных
         private void recognition(string str)
         {
             string[] mas = new string[] { @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(=(\s)*(-)?([0-9])+(\s)*(;))", @"[-]?([0-9])*",
                                           @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(=(\s)*[']((\s)*(\w)*)*['](\s)*)", @"(\s)*[']((\s)*(\w)*)*['](\s)*",
                                           @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*=(\s)*правда|ложь(\s)*;", @"правда|ложь",
                                           @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*=(\s)*([0-9]+).([0-9]+)(\s)*;", @"([0-9]+).([0-9]+)"};
+            string[] masNotChange = new string[] { @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(;)", @":(\s)*([А-Я]|[а-я])([А-Я]|[а-я]|[0-9])*" };
             for (int i = 0; i < identPeremen.Count; i++)
             {
                 try
-                {
-                    
+                {                                       
                     Regex regex = new Regex(identPeremen[i] + mas[i*2]);
                     MatchCollection matches = regex.Matches(str);
-                    Regex regex2 = new Regex(identPeremen[i] + @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(;)");
+
+                    Regex regex2 = new Regex(identPeremen[i] + masNotChange[0]);
                     MatchCollection matches2 = regex2.Matches(str);
                     if ((matches.Count > 0) || (matches2.Count > 0))
                     {
@@ -214,7 +216,7 @@ namespace Translator
                         string ident = matches[0].ToString();
 
                         //получаем имя своей переменной
-                        regex = new Regex(@":(\s)*([А-Я]|[а-я])([А-Я]|[а-я]|[0-9])*");
+                        regex = new Regex(masNotChange[1]);
                         matches = regex.Matches(str);
                         string name = matches[0].ToString();
                         string sname = "";
@@ -227,31 +229,20 @@ namespace Translator
                         matches = regex.Matches(str);
                         if (matches.Count > 0)
                         {
+                            bool f = false;
                             for (int j = 0; j < matches.Count; j++)
                                 if (matches[j].ToString() != "")
                                 {
-                                    listStr.Add(new string[] { "id", ident, sname, matches[j].ToString() });                                    
+                                    listStr.Add(new string[] { "id", ident, sname, matches[j].ToString() });
+                                    f = true;
+                                    break;
                                 }
-                            switch(ident)
-                            {
-                                case "цп": { listStr.Add(new string[] { "id", ident, sname, "0" }); } break;
-                                case "сп": { listStr.Add(new string[] { "id", ident, sname, "''" }); } break;
-                                case "лп": { listStr.Add(new string[] { "id", ident, sname, "ложь" }); } break;
-                                case "дп": { listStr.Add(new string[] { "id", ident, sname, "0.0" }); } break;
-                            }
-                            
-                        }
-                        else
-                        {
-                             switch(ident)
-                            {
-                                //case "цп": { listStr.Add(new string[] { "id", ident, sname, "0" }); } break;
-                                case "сп": { listStr.Add(new string[] { "id", ident, sname, "''" }); } break;
-                                case "лп": { listStr.Add(new string[] { "id", ident, sname, "ложь" }); } break;
-                                case "дп": { listStr.Add(new string[] { "id", ident, sname, "0.0" }); } break;
-                            }
+                            if (f) break;
+                            switchStr(ref ident, ref sname);
 
                         }
+                        else switchStr(ref ident, ref sname);
+                        
 
                     }
                 }
@@ -260,221 +251,17 @@ namespace Translator
             }
         }
 
-       /* private bool recognition1(string str)
+        private void switchStr(ref string ident, ref string sname)
         {
-            //for (int i = 0; i < identPeremen.Count; i++)
+            switch (ident)
             {
-                try
-                {
-                    Regex regex = new Regex(identPeremen[0] + @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(=(\s)*(-)?([0-9])+(\s)*(;))");
-                    MatchCollection matches = regex.Matches(str);
-                    Regex regex2 = new Regex(identPeremen[0] + @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(;)");
-                    MatchCollection matches2 = regex2.Matches(str);
-                    if ((matches.Count > 0)||(matches2.Count > 0))
-                    {
-                        //получаем тип своей переменной
-                        regex = new Regex(identPeremen[0]);
-                        matches = regex.Matches(str);
-                        string ident = matches[0].ToString();
-
-                        //получаем имя своей переменной
-                        regex = new Regex(@":(\s)*([А-Я]|[а-я])([А-Я]|[а-я]|[0-9])*");
-                        matches = regex.Matches(str);
-                        string name = matches[0].ToString();
-                        string sname = "";
-                        for (int j = 0; j < name.Length; j++)
-                            if ((name[j] != '\t') && (name[j] != ' ') && (name[j] != ':')) sname += name[j];
-                            else if (sname.Length != 0) break;
-
-                        //получаем значение своей переменной
-                        regex = new Regex(@"[-]?([0-9])*");                        
-                        matches = regex.Matches(str);
-                        if (matches.Count > 0)
-                        {
-                            for (int j = 0; j < matches.Count; j++)
-                                if (matches[j].ToString() != "")
-                                {
-                                    listStr.Add(new string[] { "id", ident, sname, matches[j].ToString() });
-                                    return true;
-                                }
-                            listStr.Add(new string[] { "id", ident, sname, "0" });
-                            return true;
-                        }                      
-
-                    }                   
-                }
-                catch { }
-                
+                case "цп": { listStr.Add(new string[] { "id", ident, sname, "0" }); } break;
+                case "сп": { listStr.Add(new string[] { "id", ident, sname, "''" }); } break;
+                case "лп": { listStr.Add(new string[] { "id", ident, sname, "ложь" }); } break;
+                case "дп": { listStr.Add(new string[] { "id", ident, sname, "0.0" }); } break;
             }
-
-            return true;
-        }*/
-        /*private bool recognition2(string str)
-        {
-           
-            {
-                try
-                {
-                    Regex regex = new Regex(identPeremen[1] + @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(=(\s)*[']((\s)*(\w)*)*['](\s)*)");
-                    MatchCollection matches = regex.Matches(str);
-                    Regex regex2 = new Regex(identPeremen[1] + @"(\s*):(\s*)([А-Я]||[а-я])([А-Я]||[а-я]||[0-9])*(\s)*(;)");
-                    MatchCollection matches2 = regex2.Matches(str);
-                    if ((matches.Count > 0) || (matches2.Count > 0))
-                    {
-                        //получаем тип своей переменной
-                        regex = new Regex(identPeremen[1]);
-                        matches = regex.Matches(str);
-                        string ident = matches[0].ToString();
-
-                        //получаем имя своей переменной
-                        regex = new Regex(@":(\s)*([А-Я]|[а-я])([А-Я]|[а-я]|[0-9])*");
-                        matches = regex.Matches(str);
-                        string name = matches[0].ToString();
-                        string sname = "";
-                        for (int j = 0; j < name.Length; j++)
-                            if ((name[j] != '\t') && (name[j] != ' ') && (name[j] != ':')) sname += name[j];
-                            else if (sname.Length != 0) break;
-                       
-                        //получаем значение своей переменной                        
-                        regex = new Regex(@"(\s)*[']((\s)*(\w)*)*['](\s)*");
-                        matches = regex.Matches(str);
-                        if (matches.Count > 0)
-                        {
-                            for (int j = 0; j < matches.Count; j++)
-                                if (matches[j].ToString() != "")
-                                {
-                                    listStr.Add(new string[] { "id", ident, sname, matches[j].ToString() });
-                                    return true;
-                                }
-                            listStr.Add(new string[] { "id", ident, sname, "''" });
-                            return true;
-                        }
-                        else
-                        {
-                            listStr.Add(new string[] { "id", ident, sname, "''" });
-                            return true;
-                        }
-
-                    }
-                }
-                catch { }
-
-            }
-
-            return true;
-        }*/
-
-
-       /* private bool recognition3(string str)
-        {
-
-            {
-                try
-                {
-                    Regex regex = new Regex(identPeremen[2] + @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*=(\s)*правда|ложь(\s)*;");
-                    MatchCollection matches = regex.Matches(str);
-                    Regex regex2 = new Regex(identPeremen[2] + @"(\s*):(\s*)([А-Я]||[а-я])([А-Я]||[а-я]||[0-9])*(\s)*(;)");
-                    MatchCollection matches2 = regex2.Matches(str);
-                    if ((matches.Count > 0) || (matches2.Count > 0))
-                    {
-                        //получаем тип своей переменной
-                        regex = new Regex(identPeremen[2]);
-                        matches = regex.Matches(str);
-                        string ident = matches[0].ToString();
-
-                        //получаем имя своей переменной
-                        regex = new Regex(@":(\s)*([А-Я]|[а-я])([А-Я]|[а-я]|[0-9])*");
-                        matches = regex.Matches(str);
-                        string name = matches[0].ToString();
-                        string sname = "";
-                        for (int j = 0; j < name.Length; j++)
-                            if ((name[j] != '\t') && (name[j] != ' ') && (name[j] != ':')) sname += name[j];
-                            else if (sname.Length != 0) break;
-
-                        //получаем значение своей переменной                        
-                        regex = new Regex(@"правда|ложь");
-                        matches = regex.Matches(str);
-                        if (matches.Count > 0)
-                        {
-                            for (int j = 0; j < matches.Count; j++)
-                                if (matches[j].ToString() != "")
-                                {
-                                    listStr.Add(new string[] { "id", ident, sname, matches[j].ToString() });
-                                    return true;
-                                }
-                            listStr.Add(new string[] { "id", ident, sname, "ложь" });
-                            return true;
-                        }
-                        else
-                        {
-                            listStr.Add(new string[] { "id", ident, sname, "ложь" });
-                            return true;
-                        }
-
-                    }
-                }
-                catch { }
-
-            }
-
-            return true;
-        }*/
-
-        /*private bool recognition4(string str)
-        {
-
-            {
-                try
-                {
-                    Regex regex = new Regex(identPeremen[3] + @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*=(\s)*([0-9]+).([0-9]+)(\s)*;");
-                    MatchCollection matches = regex.Matches(str);
-                    Regex regex2 = new Regex(identPeremen[3] + @"(\s*):(\s*)([А-Я]||[а-я])([А-Я]||[а-я]||[0-9])*(\s)*(;)");
-                    MatchCollection matches2 = regex2.Matches(str);
-                    if ((matches.Count > 0) || (matches2.Count > 0))
-                    {
-                        //получаем тип своей переменной
-                        regex = new Regex(identPeremen[3]);
-                        matches = regex.Matches(str);
-                        string ident = matches[0].ToString();
-
-                        //получаем имя своей переменной
-                        regex = new Regex(@":(\s)*([А-Я]|[а-я])([А-Я]|[а-я]|[0-9])*");
-                        matches = regex.Matches(str);
-                        string name = matches[0].ToString();
-                        string sname = "";
-                        for (int j = 0; j < name.Length; j++)
-                            if ((name[j] != '\t') && (name[j] != ' ') && (name[j] != ':')) sname += name[j];
-                            else if (sname.Length != 0) break;
-
-                        //получаем значение своей переменной                        
-                        regex = new Regex(@"([0-9]+).([0-9]+)");
-                        matches = regex.Matches(str);
-                        if (matches.Count > 0)
-                        {
-                            for (int j = 0; j < matches.Count; j++)
-                                if (matches[j].ToString() != "")
-                                {
-                                    listStr.Add(new string[] { "id", ident, sname, matches[j].ToString() });
-                                    return true;
-                                }
-                            listStr.Add(new string[] { "id", ident, sname, "0.0" });
-                            return true;
-                        }
-                        else
-                        {
-                            listStr.Add(new string[] { "id", ident, sname, "0.0" });
-                            return true;
-                        }
-
-                    }
-                }
-                catch { }
-
-            }
-
-            return true;
-        }*/
-
+        }
+               
         //дочитать до конца строку идентификатора
         private string idReadToEnd(in int i, string str)
         {
