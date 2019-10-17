@@ -19,10 +19,10 @@ namespace Translator
         List<string[]> listStr = new List<string[]>();
         //списки для резервированных слов
         List<string> identPeremen = new List<string>() { "цп", "сп", "лп", "дп" };
-        List<string> identReadWrite = new List<string>() { "вывод", "читать" };
+        List<string> identReadWrite = new List<string>() { "вывод", "читать", "вывод" };
         List<string> identCondition = new List<string>() { "Если", "то", "иначе" };
-        List<string> identFor = new List<string>() { "для", "до", "{" ,"}"};
-        List<string> identWhile = new List<string>() { "пока", "(", ")", "{", "}" };
+        //List<string> identFor = new List<string>() { "для", "до", "{" ,"}"};
+        //List<string> identWhile = new List<string>() { "пока", "(", ")", "{", "}" };
         //список для хранения токенов
         List<string[]> listToken = new List<string[]>();
         /*---------------------------------------------------*/
@@ -32,56 +32,16 @@ namespace Translator
         {
             //Обнуление строки информации
             Form1.Str_Write = "";
+
             //разрешение на перекомпиляцию
             Form1.Launcher_Prog = true;
-            if (Search_Programm(Text) == 1) //поиск - программа
-            {
-                if (Search_Func_Main(Text) == 1) //поиск - главная функция
-                {
-                    if (Read_Str_Func(Text) == 1)
-                    {
+            if (Search_Programm(Text) == 1) //поиск - программа            
+                if (Search_Func_Main(Text) == 1) //поиск - главная функция                
+                    if (Read_Str_Func(Text) == 1)                    
                         //запись в токен
-                        if (getMasToken())
-                        {
-                            Form1.Str_Write += "\nЛексический анализ (вывод токенов).\n";
-                            Form1.Str_Write += "/********************************/\n";
-                            //вывод токенов на экран
-                            foreach (string[] str in listToken)
-                            {
-                                for (int i = 0; i < str.Length; i++)
-                                    switch(str[i])
-                                    {
-                                        case "id":{
-                                                Form1.Str_Write += "(" + str[i] + ", " + str[i + 1] + ") ";
-                                                i++; 
-                                              }break;
-                                        case "читать":
-                                            {
-                                                Form1.Str_Write +=str[i] + " (" + str[i + 1] + ", " + str[i + 2] + ") ";
-                                                i = str.Length;
-                                            }
-                                            break;
-                                        case "вывод":
-                                            {
-                                                Form1.Str_Write += str[i] + " ( " + str[i + 1] + " ) ";
-                                                i = str.Length;
-                                            }
-                                            break;
-                                        default: { Form1.Str_Write += str[i] + " "; } break;
-                                    }
-                                   
-                                Form1.Str_Write += "\n";
-                            }
-                            Form1.Str_Write += "/********************************/\n";
-                            Form1.Str_Write += "Лексический анализ выполнен.\n\n";
-                        }
+                        if (getMasToken()) writeToken();                                                    
                         else Form1.Str_Write += "Ощибка получения токенов.\n";
-
-                    }
-
-                }
-            }
-
+            
         }
 
         private int Search_Programm(string[] Text)
@@ -127,7 +87,6 @@ namespace Translator
                 {
                     rang = Check_Scob1(str, rang);
                     rang2 = Check_Scob2(str, rang2);
-
                 }
             }
 
@@ -180,12 +139,9 @@ namespace Translator
         {
             foreach (string str in Text)
             {
-                recognition(str);                
-
-                //if (!recognition1(str)) Form1.Str_Write += "Ошибка в строке: { " + str +" } \n";
-                //if (!recognition2(str)) Form1.Str_Write += "Ошибка в строке: { " + str + " } \n";
-                //if (!recognition3(str)) Form1.Str_Write += "Ошибка в строке: { " + str + " } \n";
-                //if (!recognition4(str)) Form1.Str_Write += "Ошибка в строке: { " + str + " } \n";                
+                recognition(str);
+                writeRead(str);
+                cycleFor(str);
             }
 
             return 1;
@@ -247,7 +203,61 @@ namespace Translator
                     }
                 }
                 catch { }
+            }
+        }
 
+        //поиск обьявления операторов ввода/вывода
+        private void writeRead(string str)
+        {
+            string[] mas = new string[] { @"(\s)*", @"('[\w*\s*(:)*(+)*(-)*(*)*(/)*(?)*]*')*", 
+                                          @"(\s)*", @"(\s)*([А-Яа-я]*)+\w*(\s)*",
+                                          @"(\s)*", @"(\s)*((([А-Яа-я])+\w*)|([+-]\d*))*(\s)*([+-/*]*)(\s)*((([А-Яа-я])+\w*)|([+-]\d*))*(\s)*"};
+            for (int i = 0; i < identReadWrite.Count; i++)
+            {
+                try
+                {                   
+                    Regex regex = new Regex(identReadWrite[i] + mas[i * 2]);
+                    MatchCollection matches = regex.Matches(str);
+
+                    if (matches.Count > 0)
+                    {
+                        //получаем тип своей переменной
+                        regex = new Regex(identReadWrite[i]);
+                        matches = regex.Matches(str);
+                        string ident = matches[0].ToString();
+                                               
+                        //что выводить/читать
+                        regex = new Regex(mas[i * 2 + 1]);
+                        matches = regex.Matches(str);
+                        if (matches.Count > 0)
+                        {
+                            if (ident == "читать")
+                            { }
+                            bool f = false;
+                            for (int j = 1; j < matches.Count; j++)
+                                if (matches[j].ToString() != "")
+                                {                                    
+                                    listStr.Add(new string[] { ident, matches[j].ToString() });
+                                    f = true;
+                                    break;
+                                }
+                            if (f) break;                            
+                        }
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private void cycleFor(string str)
+        {
+            //для ( цп: счет = 2; счет <= Н; счет++) 
+            Regex regex = new Regex(@"для(\s*)\((\s*)([А-Яа-я]*)(\s*):(\s*)[А-Яа-я]+(\w*)(\s*)=(\s*)[0-9]*(\s*);(\s*)[А-Яа-я]+(\w*)(\s*)(<=|>=|!=|==|<|>)+(\s*)[А-Яа-я]+(\w*)(\s*);((\s*)[А-Яа-я]+(\w*)\+\+|(\s*)[А-Яа-я]+(\w*)(\s*)(\+|\-|\*|/)=(\s*)([0-9]*|[А-Яа-я]+(\w*)))\)(\s*)(\{)?"); 
+            MatchCollection matches = regex.Matches(str);
+            if (matches.Count>0)
+            {
+                string cycle = matches[0].ToString();
+                123
             }
         }
 
@@ -260,8 +270,99 @@ namespace Translator
                 case "лп": { listStr.Add(new string[] { "id", ident, sname, "ложь" }); } break;
                 case "дп": { listStr.Add(new string[] { "id", ident, sname, "0.0" }); } break;
             }
+        }               
+
+        private void writeToken()
+        {
+            Form1.Str_Write += "\nЛексический анализ (вывод токенов).\n";
+            Form1.Str_Write += "/********************************/\n";
+            //вывод токенов на экран
+            foreach (string[] str in listToken)
+            {
+                for (int i = 0; i < str.Length; i++)
+                    switch (str[i])
+                    {
+                        case "id":
+                            {
+                                Form1.Str_Write += "(" + str[i] + ", " + str[i + 1] + ") ";
+                                i++;
+                            }
+                            break;
+                        case "читать":
+                            {                               
+                                Form1.Str_Write += str[i] + " (" + str[i + 1] + ", " + str[i + 2] + ") ";
+                                i = str.Length;
+                            }
+                            break;
+                        case "вывод":
+                            {
+                                Form1.Str_Write += str[i] + " ( " + str[i + 1] + " ) ";
+                                i = str.Length;
+                            }
+                            break;
+                        default: { Form1.Str_Write += str[i] + " "; } break;
+                    }
+
+                Form1.Str_Write += "\n";
+            }
+            Form1.Str_Write += "/********************************/\n";
+            Form1.Str_Write += "Лексический анализ выполнен.\n\n";
         }
-               
+
+        private bool getMasToken()
+        {
+            bool result = false;
+            int i = 0;
+
+            foreach (string[] str in listStr)
+            {
+                switch (str[0])
+                {
+                    case "id":
+                        {
+                            listToken.Add(new string[] { "id", i.ToString(), "=", str[3] });
+                        }
+                        break;
+                    case "вывод":
+                        {
+                            listToken.Add(new string[] { str[0], str[1] });
+                        }
+                        break;
+                    case "читать":
+                        {
+                            listToken.Add(new string[] { str[0], "id", changeIdent(str[1]) });
+                        }
+                        break;
+                }
+                i++;
+            }
+            result = true;
+
+
+            return result;
+        }
+
+        //метод для замены идентификаторов на обозначение (возможно это лишнее)
+        private string changeIdent(string s)
+        {
+            int j = 0;
+            foreach (string[] str in listStr)
+            {
+                for (int i = 0; i < str.Length; i++)
+                    if (str[i] == s)
+                    {
+                        return j.ToString();
+                    }
+                j++;
+            }
+            Form1.Str_Write += "Переменная не объявлена!\n";
+            return null;
+        }
+        /******************************************************дальше не нужные функции**********************************************************************/
+
+
+
+
         //дочитать до конца строку идентификатора
         private string idReadToEnd(in int i, string str)
         {
@@ -367,49 +468,6 @@ namespace Translator
                 }
                 return perem;
             }               
-        }
-
-        private bool getMasToken()
-        {
-            bool result = false;
-            int i = 0;
-
-            foreach (string[] str in listStr)
-            {
-                switch(str[0])
-                {
-                    case "id": {                          
-                            listToken.Add(new string[] { "id" , i.ToString(), "=", str[3] });
-                        } break;
-                    case "вывод":{                            
-                            listToken.Add(new string[] { str[0], str[1]});
-                        } break;
-                    case "читать":{                            
-                            listToken.Add(new string[] { str[0], "id", changeIdent(str[1]) });
-                        } break;
-                }
-                i++;
-            }
-            result = true;              
-            
-
-            return result;
-        }
-
-        //метод для замены идентификаторов на обозначение (возможно это лишнее)
-        private string changeIdent(string s)
-        {
-            int j = 0;
-            foreach (string[] str in listStr)
-            {
-                for (int i = 0; i < str.Length; i++)
-                    if (str[i] == s) {
-                        return j.ToString();
-                    }
-                j++;
-            }
-            Form1.Str_Write += "Переменная не объявлена!\n";
-            return null;
-        }
+        }        
     }
 }

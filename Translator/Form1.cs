@@ -22,8 +22,8 @@ namespace Translator
             InitializeComponent();
             richTextBox2.Enabled = false;
             /*******для теста****/
-            richTextBox1.Text = System.IO.File.ReadAllText("D:\\Универ\\Компиляторы\\Сумма.txt");
-            richTextBox4.AppendText("Файл  <" + "D:\\Универ\\Компиляторы\\Сумма.txt" + ">  загружен.\n");
+            richTextBox1.Text = System.IO.File.ReadAllText("D:\\Универ\\Компиляторы\\задача_Флавия.txt");
+            richTextBox4.AppendText("Файл  <" + "D:\\Универ\\Компиляторы\\задача_Флавия.txt" + ">  загружен.\n");
             /**********/
         }
 
