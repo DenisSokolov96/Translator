@@ -37,7 +37,7 @@ namespace Translator
             Form1.Launcher_Prog = true;
             if (Search_Programm(Text) == 1) //поиск - программа            
                 if (Search_Func_Main(Text) == 1) //поиск - главная функция                
-                    if (Read_Str_Func(Text) == 1)                    
+                    if (Read_Str_Text(Text) == 1)                    
                         //запись в токен
                         if (getMasToken()) writeToken();                                                    
                         else Form1.Str_Write += "Ощибка получения токенов.\n";
@@ -63,10 +63,7 @@ namespace Translator
             }
             else
             {
-                string str = "";
-                for (int i = 9; i < str_name.Length - 1; i++)
-                    if (str_name[i].ToString() != " ") str += str_name[i];
-                listStr.Add(new string[] { "Программа", str });
+                listStr.Add(new string[] { str_name });
                 return 1;
             };
         }
@@ -135,20 +132,34 @@ namespace Translator
         }
 
         //Чтение и разбор строк в функции 
-        private int Read_Str_Func(string[] Text)
+        private int Read_Str_Text(string[] Text)
         {
+            int i = 0;
             foreach (string str in Text)
             {
-                recognition(str);
-                writeRead(str);
-                cycleFor(str);
+                //проверка на цикл for
+                if (!cycleFor(str, in i, in Text))
+                {
+                    //проверка на ввод/вывод
+                    if (!writeRead(str))
+                    {
+                        //проверка на инициализацию переменных
+                        if (!recognition(str))
+                        {
+                            if ( (str!= "") && (str != "\t") && (str != "\t\t") && !listStr[0].Contains(str) )
+                                Form1.Str_Write += "Ошибка в строке: {" + str + " }\n";
+                        }                        
+                    }                        
+
+                }                
+                i++;
             }
 
             return 1;
         }
 
         //поиск обьявления переменных
-        private void recognition(string str)
+        private bool recognition(string str)
         {
             string[] mas = new string[] { @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(=(\s)*(-)?([0-9])+(\s)*(;))", @"[-]?([0-9])*",
                                           @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(=(\s)*[']((\s)*(\w)*)*['](\s)*)", @"(\s)*[']((\s)*(\w)*)*['](\s)*",
@@ -181,7 +192,7 @@ namespace Translator
                             else if (sname.Length != 0) break;
 
                         //получаем значение своей переменной
-                        regex = new Regex(mas[i*2+1]);
+                        regex = new Regex(mas[i * 2 + 1]);
                         matches = regex.Matches(str);
                         if (matches.Count > 0)
                         {
@@ -191,23 +202,29 @@ namespace Translator
                                 {
                                     listStr.Add(new string[] { "id", ident, sname, matches[j].ToString() });
                                     f = true;
-                                    break;
+                                    return true;
                                 }
                             if (f) break;
                             switchStr(ref ident, ref sname);
+                            return true;
 
                         }
-                        else switchStr(ref ident, ref sname);
-                        
+                        else {
+                            switchStr(ref ident, ref sname);
+                            return true;
+                        }                       
 
                     }
                 }
                 catch { }
             }
+
+            //не найден
+            return false;
         }
 
         //поиск обьявления операторов ввода/вывода
-        private void writeRead(string str)
+        private bool writeRead(string str)
         {
             string[] mas = new string[] { @"(\s)*", @"('[\w*\s*(:)*(+)*(-)*(*)*(/)*(?)*]*')*", 
                                           @"(\s)*", @"(\s)*([А-Яа-я]*)+\w*(\s)*",
@@ -239,7 +256,7 @@ namespace Translator
                                 {                                    
                                     listStr.Add(new string[] { ident, matches[j].ToString() });
                                     f = true;
-                                    break;
+                                    return true;
                                 }
                             if (f) break;                            
                         }
@@ -247,9 +264,11 @@ namespace Translator
                 }
                 catch { }
             }
+            //не найден
+            return false;
         }
 
-        private void cycleFor(string str)
+        private bool cycleFor(string str, in int i,in string[] Text)
         {
             //для ( цп: счет = 2; счет <= Н; счет++) 
             Regex regex = new Regex(@"для(\s*)\((\s*)([А-Яа-я]*)(\s*):(\s*)[А-Яа-я]+(\w*)(\s*)=(\s*)[0-9]*(\s*);(\s*)[А-Яа-я]+(\w*)(\s*)(<=|>=|!=|==|<|>)+(\s*)[А-Яа-я]+(\w*)(\s*);((\s*)[А-Яа-я]+(\w*)\+\+|(\s*)[А-Яа-я]+(\w*)(\s*)(\+|\-|\*|/)=(\s*)([0-9]*|[А-Яа-я]+(\w*)))\)(\s*)(\{)?"); 
@@ -257,8 +276,20 @@ namespace Translator
             if (matches.Count>0)
             {
                 string cycle = matches[0].ToString();
-                123
+                //если есть открывающая скобка то надо считать до закрывающей
+                Regex reg = new Regex(@"{");
+                MatchCollection mat = reg.Matches(cycle);
+                if (mat.Count>0)
+                {
+                    reg = new Regex(@"}");
+                    mat = reg.Matches(cycle);
+
+                    //цикл найден
+                    return true;
+                }
             }
+            //не найден
+            return false;
         }
 
         private void switchStr(ref string ident, ref string sname)
