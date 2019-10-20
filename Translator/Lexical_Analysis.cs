@@ -21,8 +21,6 @@ namespace Translator
         List<string> identPeremen = new List<string>() { "цп", "сп", "лп", "дп" };
         List<string> identReadWrite = new List<string>() { "вывод", "читать", "вывод" };
         List<string> identCondition = new List<string>() { "Если", "то", "иначе" };
-        //List<string> identFor = new List<string>() { "для", "до", "{" ,"}"};
-        //List<string> identWhile = new List<string>() { "пока", "(", ")", "{", "}" };
         //список для хранения токенов
         List<string[]> listToken = new List<string[]>();
         /*---------------------------------------------------*/
@@ -40,8 +38,7 @@ namespace Translator
                     if (Read_Str_Text(Text) == 1)                    
                         //запись в токен
                         if (getMasToken()) writeToken();                                                    
-                        else Form1.Str_Write += "Ощибка получения токенов.\n";
-            
+                        else Form1.Str_Write += "Ощибка получения токенов.\n";            
         }
 
         private int Search_Programm(string[] Text)
@@ -146,8 +143,12 @@ namespace Translator
                         //проверка на инициализацию переменных
                         if (!recognition(str))
                         {
-                            if ( (str!= "") && (str != "\t") && (str != "\t\t") && !listStr[0].Contains(str) )
-                                Form1.Str_Write += "Ошибка в строке: {" + str + " }\n";
+                            //проверка на выражение
+                            if (!expression(str))
+                            {
+                                if ((str != "") && (str != "\t") && (str != "\t\t") && !listStr[0].Contains(str))
+                                    Form1.Str_Write += "Ошибка в строке: {" + str + " }\n";
+                            }
                         }                        
                     }                        
 
@@ -276,20 +277,97 @@ namespace Translator
             if (matches.Count>0)
             {
                 string cycle = matches[0].ToString();
-                //если есть открывающая скобка то надо считать до закрывающей
-                Regex reg = new Regex(@"{");
-                MatchCollection mat = reg.Matches(cycle);
-                if (mat.Count>0)
-                {
-                    reg = new Regex(@"}");
-                    mat = reg.Matches(cycle);
+                listStr.Add(new string[] { "цикл", "для" });
+                if (!recognition(cycle)) Form1.Str_Write += "Ошибка в обьявлении переменной {"  + str + " }\n";
 
-                    //цикл найден
-                    return true;
+                regex = new Regex(@"[А-Яа-я]+(\w*)(\s*)(<=|>=|!=|==|<|>)+(\s*)[А-Яа-я]+(\w*)(\s*);");
+                matches = regex.Matches(cycle);
+                if (matches.Count > 0)
+                    cycle = matches[0].ToString();
+                else Form1.Str_Write += "Ошибка в обьявлении переменной {" + str + " }\n";
+
+                string sName = "";
+                string s2 = "";
+                string s3 = "";
+                for (int j = 0; j < cycle.Length; j++)
+                {
+                    if ((cycle[j] == '<') || (cycle[j] == '>') || (cycle[j] == '!') || (cycle[j] == '='))
+                    {                        
+                        for (int j2 = j; j2 < cycle.Length; j2++)
+                        {
+                            if ((cycle[j2] != '<') && (cycle[j2] != '>') && (cycle[j2] != '!') && (cycle[j2] != '='))
+                            {
+                                for (int j3 = j2; j3 < cycle.Length; j3++)
+                                    if (cycle[j3] != ';') { if (cycle[j3] != ' ') s3 += cycle[j3]; }
+                                    else
+                                    {
+                                        listStr.Add(new string[] { "выполнение", sName, s2, s3 });
+                                        break;
+                                    }
+                                break;
+                            }
+                            s2 += cycle[j2];
+                        }
+                        break;
+                    }
+                    if (cycle[j]!=' ') sName += cycle[j];                    
                 }
+                regex = new Regex(@"((\s*)[А-Яа-я]+(\w*)\+\+|(\s*)[А-Яа-я]+(\w*)(\s*)(\+|\-|\*|/)=(\s*)([0-9]*|[А-Яа-я]+(\w*)))\)(\s*)(\{)?");
+                matches = regex.Matches(str);
+                if (matches.Count > 0)
+                    cycle = matches[0].ToString();
+                else Form1.Str_Write += "Ошибка в обьявлении переменной {" + str + " }\n";
+
+                sName = "";
+                for (int j = 0; j < cycle.Length; j++)
+                {
+                    if ((cycle[j] == '+') || (cycle[j] == '-') || (cycle[j] == '*') || (cycle[j] == '/') ||  (cycle[j] == '='))
+                    {
+                        s2 = "";
+                        for (int j2 = j; j2 < cycle.Length; j2++)
+                        {
+                            if ((cycle[j2] != '+') && (cycle[j2] != '-') && (cycle[j2] != '*') && (cycle[j2] != '=') && (cycle[j2] != '/'))
+                            {
+                                s3 = "";
+                                for (int j3 = j2; j3 < cycle.Length; j3++)
+                                    if (cycle[j3] != ')') { if (cycle[j3] != ' ') s3 += cycle[j3]; }
+                                    else
+                                    {
+                                        if (s3 == "") listStr.Add(new string[] { "изменение", sName, "на", strZnToInt(in s2).ToString() });
+                                            else listStr.Add(new string[] { "изменение", sName, "на", s3 });
+                                        listStr.Add(new string[] { "начало цикла","{" });
+                                        return true;
+                                    }
+                            }
+                            if (cycle[j2] != ' ') s2 += cycle[j2];
+                        }
+                    }
+                    if (cycle[j] != ' ') sName += cycle[j]; 
+                }
+
             }
             //не найден
             return false;
+        }
+
+        private bool expression(string str)
+        {
+            //человек = (человек + К) % счет;
+            Regex regex = new Regex(@"(\s*)([А-Яа-я]*)(\s*)(+=|-=|\*=|/=|=)+(\s*)   (\s*)[0-9]*(\s*);(\s*)[А-Яа-я]+(\w*)(\s*)(<=|>=|!=|==|<|>)+(\s*)[А-Яа-я]+(\w*)(\s*);((\s*)[А-Яа-я]+(\w*)\+\+|(\s*)[А-Яа-я]+(\w*)(\s*)(\+|\-|\*|/)=(\s*)([0-9]*|[А-Яа-я]+(\w*)))\)(\s*)(\{)?");
+            MatchCollection matches = regex.Matches(str);
+
+            //не найден
+            return false;
+        }
+
+        private int strZnToInt(in string s2)
+        {
+            switch (s2)
+            {
+                case "++": return 1;  
+                case "--": return -1;
+            }
+            return 0;
         }
 
         private void switchStr(ref string ident, ref string sname)
