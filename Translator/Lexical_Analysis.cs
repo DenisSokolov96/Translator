@@ -11,10 +11,25 @@ namespace Translator
     {
         /*---------------------------------------------------*/
         /* Информация для хранения разобраных лексем
+         * 
          * [Программа][имя программы] - для название программы
+         * 
          * [id№][тип][имя переменной][значение] - для переменных
+         * 
          * [вывод/читать][указать то что выводим/в какую пременную считываем] - для вывода/ввода на экран  
+         * 
          * [резервированное слово][условие/действие] - для условий
+         * 
+         * [функ][Главная ()] - для объявления функции
+         * [{]
+         * [}]
+         * 
+         * [цикл][для] - для цикла for
+         * [id№][тип][имя переменной][значение] - для переменных
+         * [выполнение][имя переменной/id№][<=][значение/переменная]
+         * [изменение][счет][1]
+         * [{]
+         * [}]
          */
         List<string[]> listStr = new List<string[]>();
         //списки для резервированных слов
@@ -74,7 +89,7 @@ namespace Translator
             foreach (string str in Text)
             {
 
-                Regex regex = new Regex(@"Главная(\s*)");
+                Regex regex = new Regex(@"(\s*)Главная(\s*)\((\s*)\)(\{*)");
                 MatchCollection matches = regex.Matches(str);
                 k += matches.Count;
                 if (k > 0)
@@ -101,7 +116,11 @@ namespace Translator
                 Form1.Str_Write += "Не найдена главная функция.\n**********************\n";
                 return 0;
             }
-            else return 1;
+            else {
+                listStr.Add(new string[] { "функция" , "Главная ()" });
+                return 1;
+            }
+            
         }
 
         //функция проверки (подсчет) скобочной структуры {}
@@ -145,9 +164,18 @@ namespace Translator
                         {
                             //проверка на выражение
                             if (!expression(str))
-                            {
-                                if ((str != "") && (str != "\t") && (str != "\t\t") && !listStr[0].Contains(str))
-                                    Form1.Str_Write += "Ошибка в строке: {" + str + " }\n";
+                            {   
+                                switch (str) {
+                                    case "\t{": 
+                                    case "{":
+                                    case "\t}":
+                                    case "}": { listStr.Add(new string[] { str }); } break;
+                                    case "Главная (){": { listStr.Add(new string[] { "{" }); } break;
+                                    default: {
+                                            if ((str != "") && (str != "\t") && (str != "\t\t") && !listStr[0].Contains(str) )
+                                                Form1.Str_Write += "Ошибка в строке: {" + str + " }\n";
+                                        } break;
+                                }
                             }
                         }                        
                     }                        
@@ -286,9 +314,9 @@ namespace Translator
                     cycle = matches[0].ToString();
                 else Form1.Str_Write += "Ошибка в обьявлении переменной {" + str + " }\n";
 
-                string sName = "";
-                string s2 = "";
-                string s3 = "";
+                string sName = ""; //счет
+                string signСondition = ""; //<=
+                string sign = ""; //Н
                 for (int j = 0; j < cycle.Length; j++)
                 {
                     if ((cycle[j] == '<') || (cycle[j] == '>') || (cycle[j] == '!') || (cycle[j] == '='))
@@ -298,15 +326,15 @@ namespace Translator
                             if ((cycle[j2] != '<') && (cycle[j2] != '>') && (cycle[j2] != '!') && (cycle[j2] != '='))
                             {
                                 for (int j3 = j2; j3 < cycle.Length; j3++)
-                                    if (cycle[j3] != ';') { if (cycle[j3] != ' ') s3 += cycle[j3]; }
+                                    if (cycle[j3] != ';') { if (cycle[j3] != ' ') sign += cycle[j3]; }
                                     else
                                     {
-                                        listStr.Add(new string[] { "выполнение", sName, s2, s3 });
+                                        listStr.Add(new string[] { "выполнение", sName, signСondition, sign });
                                         break;
                                     }
                                 break;
                             }
-                            s2 += cycle[j2];
+                            signСondition += cycle[j2];
                         }
                         break;
                     }
@@ -323,23 +351,22 @@ namespace Translator
                 {
                     if ((cycle[j] == '+') || (cycle[j] == '-') || (cycle[j] == '*') || (cycle[j] == '/') ||  (cycle[j] == '='))
                     {
-                        s2 = "";
+                        signСondition = "";
                         for (int j2 = j; j2 < cycle.Length; j2++)
                         {
                             if ((cycle[j2] != '+') && (cycle[j2] != '-') && (cycle[j2] != '*') && (cycle[j2] != '=') && (cycle[j2] != '/'))
                             {
-                                s3 = "";
+                                sign = "";
                                 for (int j3 = j2; j3 < cycle.Length; j3++)
-                                    if (cycle[j3] != ')') { if (cycle[j3] != ' ') s3 += cycle[j3]; }
+                                    if (cycle[j3] != ')') { if (cycle[j3] != ' ') sign += cycle[j3]; }
                                     else
                                     {
-                                        if (s3 == "") listStr.Add(new string[] { "изменение", sName, "на", strZnToInt(in s2).ToString() });
-                                            else listStr.Add(new string[] { "изменение", sName, "на", s3 });
-                                        listStr.Add(new string[] { "начало цикла","{" });
+                                        if (sign == "") listStr.Add(new string[] { "изменение", sName, strToInt(in signСondition).ToString() });
+                                            else listStr.Add(new string[] { "изменение", sName, sign });
                                         return true;
                                     }
                             }
-                            if (cycle[j2] != ' ') s2 += cycle[j2];
+                            if (cycle[j2] != ' ') signСondition += cycle[j2];
                         }
                     }
                     if (cycle[j] != ' ') sName += cycle[j]; 
@@ -350,17 +377,23 @@ namespace Translator
             return false;
         }
 
+        //проверка на выражение
         private bool expression(string str)
         {
             //человек = (человек + К) % счет;
-            Regex regex = new Regex(@"(\s*)([А-Яа-я]*)(\s*)(+=|-=|\*=|/=|=)+(\s*)   (\s*)[0-9]*(\s*);(\s*)[А-Яа-я]+(\w*)(\s*)(<=|>=|!=|==|<|>)+(\s*)[А-Яа-я]+(\w*)(\s*);((\s*)[А-Яа-я]+(\w*)\+\+|(\s*)[А-Яа-я]+(\w*)(\s*)(\+|\-|\*|/)=(\s*)([0-9]*|[А-Яа-я]+(\w*)))\)(\s*)(\{)?");
+            Regex regex = new Regex(@"(\s*)([А-Яа-я]+(\w*))(\s*)[(+=)(-=)(\*=)(/=)(=)]+(\s*)(\(?(\s*)[А-Яа-я]+(\w*)(\s*)[(+)(-)(*)(/)(%)]*(\s*)([А-Яа-я]+(\w*))*(\s*)\)?)*[(+)(-)(*)(/)(%)]*(\s*)([А-Яа-я]+(\w*))*(\s*);(\s*)");            
             MatchCollection matches = regex.Matches(str);
-
+            if (matches.Count > 0)
+            {
+                
+                //найден
+                return true;
+            }
             //не найден
             return false;
         }
 
-        private int strZnToInt(in string s2)
+        private int strToInt(in string s2)
         {
             switch (s2)
             {
@@ -442,6 +475,10 @@ namespace Translator
                             listToken.Add(new string[] { str[0], "id", changeIdent(str[1]) });
                         }
                         break;
+                    default: { if (str.Length==1) listToken.Add(new string[] { str[0] });
+                               if (str.Length == 2)  listToken.Add(new string[] { str[0] , str[1] });
+                               if (str.Length == 3) listToken.Add(new string[] { str[0], str[1], str[2] });
+                        } break;
                 }
                 i++;
             }
