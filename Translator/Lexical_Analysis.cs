@@ -278,23 +278,47 @@ namespace Translator
                         if (matches.Count > 0)
                         {
                             string maxStr = "";
-
                             for (int k = 0; k < str.Length; k++)
                             {
                                 string newStr = "";
+                                //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                //прокручиваем до переменной
+                                while ((str[k] == ' ') || (str[k] == '\t') || (str[k] == '('))
+                                {
+                                    if (k < str.Length)
+                                        k++;
+                                    else break;
+                                }
+                                
 
-                                while ((str[k] != ' ') && (str[k] != '+'))
+                                while ((k<str.Length) && (str[k] != ' ') && (str[k] != '+') && (str[k] != '-') && (str[k] != '*') && (str[k] != '/') && (str[k] != '%') && (str[k] != '\t') && (str[k] != ')') && (str[k] != '('))
                                 {
                                     newStr += str[k];
+                                    k++;
                                 }
                                 maxStr += searchInList(newStr);
+                                if ((searchInList(newStr) == "")&&(maxStr.Length!=0)) maxStr += newStr;
+
+                                if (maxStr != "")
+                                {
+                                    //прокручиваем до переменной
+                                    while ((str[k] == ' ') || (str[k] == '\t') || (str[k] == '(') || (str[k] == ')'))
+                                    {
+                                        if (k < str.Length)
+                                            k++;
+                                        else break;
+                                    }
+                                    if ((str[k] == '+') || (str[k] == '-') || (str[k] == '*') || (str[k] == '/') || (str[k] == '%'))
+                                        maxStr += str[k]; 
+                                }
+
                             }
 
                             bool f = false;
                             for (int j = 1; j < matches.Count; j++)
                                 if (matches[j].ToString() != "")
                                 {                                    
-                                    listStr.Add(new string[] { ident, matches[j].ToString() });
+                                    listStr.Add(new string[] { ident, maxStr });
                                     f = true;
                                     return true;
                                 }
@@ -372,7 +396,7 @@ namespace Translator
                                     if (cycle[j3] != ')') { if (cycle[j3] != ' ') sign += cycle[j3]; }
                                     else
                                     {
-                                        if (sign == "") listStr.Add(new string[] { "изменение", sName, strToInt(in signСondition).ToString() });
+                                        if (sign == "") listStr.Add(new string[] { "изменение", searchInList(sName), strToInt(in signСondition).ToString() });
                                             else listStr.Add(new string[] { "изменение", sName, sign });
                                         return true;
                                     }
@@ -391,17 +415,19 @@ namespace Translator
         //поиск уже имеющихся в списке переменных
         //для преобразования их в токен
         private string searchInList(string str)
-        {
+        {           
+            int k = 0;
             foreach (string[] s in listStr)
             {
                 switch (s[0])
                 {
                     case "id":
                         {
-                            //if (s[3] == str) return "(id"+s[1]+", "+ +")";   
+                            if (s[2] == str) return "(id, "+ k.ToString() +")";   
                         }
                         break;
                 }
+                k++;
             }
             return "";
 
