@@ -277,8 +277,19 @@ namespace Translator
                         matches = regex.Matches(str);
                         if (matches.Count > 0)
                         {
-                            if (ident == "читать")
-                            { }
+                            string maxStr = "";
+
+                            for (int k = 0; k < str.Length; k++)
+                            {
+                                string newStr = "";
+
+                                while ((str[k] != ' ') && (str[k] != '+'))
+                                {
+                                    newStr += str[k];
+                                }
+                                maxStr += searchInList(newStr);
+                            }
+
                             bool f = false;
                             for (int j = 1; j < matches.Count; j++)
                                 if (matches[j].ToString() != "")
@@ -377,6 +388,24 @@ namespace Translator
             return false;
         }
 
+        //поиск уже имеющихся в списке переменных
+        //для преобразования их в токен
+        private string searchInList(string str)
+        {
+            foreach (string[] s in listStr)
+            {
+                switch (s[0])
+                {
+                    case "id":
+                        {
+                            //if (s[3] == str) return "(id"+s[1]+", "+ +")";   
+                        }
+                        break;
+                }
+            }
+            return "";
+
+        }
         //проверка на выражение
         private bool expression(string str)
         {
@@ -385,7 +414,17 @@ namespace Translator
             MatchCollection matches = regex.Matches(str);
             if (matches.Count > 0)
             {
-                
+                string sName = "";
+                int i = 0;
+                while (i < str.Length)
+                {
+                    if ((str[i] != '+') && (str[i] != '-') && (str[i] != '*') && (str[i] != '/') && (str[i] != '='))
+                    {
+                        if (str[i] != ' ')  sName += str[i];
+                    }
+                    else break;
+                    i++;
+                }
                 //найден
                 return true;
             }
