@@ -513,9 +513,11 @@ namespace Translator
                 Form1.Str_Write += "\n";
             }
             Form1.Str_Write += "/********************************/\n";
-            Form1.Str_Write += "Лексический анализ выполнен.\n\n";
+            Form1.Str_Write += "Лексический анализ выполнен.\n\n";               
+           
         }
 
+        
         private bool getMasToken()
         {
             bool result = false;
