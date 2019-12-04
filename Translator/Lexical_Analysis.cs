@@ -169,11 +169,11 @@ namespace Translator
                             if (!expression(str))
                             {   
                                 switch (str) {
+                                    case "Главная (){":
                                     case "\t{": 
-                                    case "{":
+                                    case "{": { listStr.Add(new Variable { iD = "{" }/*new string[] { str }*/); } break;
                                     case "\t}":
-                                    case "}": { listStr.Add(new Variable { value = str}/*new string[] { str }*/); } break;
-                                    case "Главная (){": { listStr.Add(new Variable { value = "{" }/*new string[] { "{" }*/); } break;
+                                    case "}": { listStr.Add(new Variable { iD = "}"}/*new string[] { str }*/); } break;
                                     default: {
                                             //if ((str != "") && (str != "\t") && (str != "\t\t") && !Head.listStr[0].Contains(str) )
                                               //  Head.Str_Write += "Ошибка в строке: {" + str + " }\n";
@@ -307,14 +307,20 @@ namespace Translator
                 for (int t = 0; t < mas_change.Length; t++)
                     mas_change[t] = mas_change[t].Trim(' ');
                 if (mas_change.Length == 2)
-                    //listStr.Add(new string[] { "для", mas_id[0], mas_id[1], mas_id[2], mas_do[0], mas_do[1], mas_do[2], mas_change[0], strToInt(mas_change[1]).ToString() });
-                    listStr.Add(new Variable { iD = "для", value = mas_id[0] + " " + mas_id[1] + " " + mas_id[2] + " " + mas_do[0] + " " + mas_do[1] + " " + mas_do[2] + " " + mas_change[0] + " " + strToInt(mas_change[1]).ToString() });
+                {
+                    listStr.Add(new Variable { iD = "для", type = mas_id[0], name = mas_id[1], value = mas_id[2] });
+                    listStr.Add(new Variable { iD = "для", value = mas_do[0] + " " + mas_do[1] + " " + mas_do[2] });
+                    listStr.Add(new Variable { iD = "для", value = mas_change[0] + " " + mas_change[1] });
+                }
                 else if (mas_change.Length == 5)
-                    //listStr.Add(new string[] { "для", mas_id[0], mas_id[1], mas_id[2], mas_do[0], mas_do[1], mas_do[2], mas_change[0], mas_change[1], mas_change[2], mas_change[3], mas_change[4] });
-                    listStr.Add(new Variable { iD = "для", value = mas_id[0] + " " + mas_id[1] + " " + mas_id[2] + " " + mas_do[0] + " " + mas_do[1] + " " + mas_do[2] + " " + mas_change[0] + " " + mas_change[1] + " " + mas_change[2] + " " + mas_change[3] });
-                else Head.Str_Write += Error.Sintax_Error_For(mas_symbol[3]);
+                        {
+                            listStr.Add(new Variable { iD = "для", type = mas_id[0], name = mas_id[1], value = mas_id[2] });
+                            listStr.Add(new Variable { iD = "для", value = mas_do[0] + " " + mas_do[1] + " " + mas_do[2] });
+                            listStr.Add(new Variable { iD = "для", value = mas_change[0] + " " + mas_change[1] + " " + mas_change[2] + " " + mas_change[3] + " " + mas_change[4] });
+                        }
+                        else Head.Str_Write += Error.Sintax_Error_For(mas_symbol[3]);
 
-                Stack_vl.Push(listStr.Count);
+                Stack_vl.Push(listStr.Count-1);
                 return true;
             }
             //не найден
@@ -352,17 +358,7 @@ namespace Translator
             }
             //не найден
             return false;
-        }
-
-        private int strToInt(in string s2)
-        {
-            switch (s2)
-            {
-                case "++": return 1;  
-                case "--": return -1;
-            }
-            return 0;
-        }             
+        }         
 
         private void writeToken()
         {

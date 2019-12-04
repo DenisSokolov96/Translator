@@ -12,10 +12,7 @@ namespace Translator
         public string iD { get; set; }        
         public string type { get; set; }
         public string name { get; set; }
-        public string value { get; set; }
-        
-        //цикл
-        public string cycle { get; set; }        
+        public string value { get; set; }        
 
         public bool Equals(Variable other)
         {
