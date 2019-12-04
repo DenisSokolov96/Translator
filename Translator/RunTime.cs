@@ -12,7 +12,7 @@ namespace Translator
         Form1 Head = new Form1();
         string Str_Write = "";
 
-        public string Start(List<Variable> listStr, string Str_Write_local, Stack<int> Stack_vl)
+        public string Start(List<Variable> listStr, string Str_Write_local, Queue<int> Queue_vl)
         {
             Str_Write = Str_Write_local;
             int i = 0;
@@ -43,20 +43,18 @@ namespace Translator
                         {
                             if (listStr[i].type != null)
                             {
-                                int temp =0;
+                                int temp = 0;
                                 i++;
-                                for (int jj = i; jj < listStr.Count(); jj++)
-                                {
-                                    if (listStr[jj].iD == "}")
+                                for (int jj = i; jj < listStr.Count(); jj++)                                
+                                    if (listStr[jj].iD == "конец для")
                                     {
                                         temp = jj;
                                         break;
                                     }
-                                }
 
                                 string[] mas_symbol = listStr[i].value.Split(' ');
                                 int j = listStr.FindIndex(x => x.name == mas_symbol[0]);
-                                comparison(ref listStr, ref mas_symbol, ref i, ref j, ref temp);                             
+                                comparison(ref listStr, ref mas_symbol, ref i, ref j, ref temp, ref Queue_vl);                             
                             }
                         }
                         break;
@@ -71,11 +69,10 @@ namespace Translator
                             check_on_equality(ref j,ref listStr,ref mas_symbol, ref str,ref i); 
                         }
                         break;
-                    case "}":
+                    case "конец для":
                         {
-                            
                             int temp = i;
-                            i = listStr.FindLastIndex(x => (x.iD == "для") /*&& (i > temp_stack)*/);
+                            i = Queue_vl.Peek();
                             if (i == -1)  i = temp; 
                             else
                             {
@@ -91,7 +88,7 @@ namespace Translator
                                 i--;
                                 mas_symbol = listStr[i].value.Split(' ');
                                 j = listStr.FindIndex(x => x.name == mas_symbol[0]);
-                                comparison(ref listStr, ref mas_symbol, ref i, ref j, ref temp);
+                                comparison(ref listStr, ref mas_symbol, ref i, ref j, ref temp, ref Queue_vl);
                             }
                         }
                         break;
@@ -226,7 +223,7 @@ namespace Translator
             else Str_Write += Error.Sintax_Error_Var_notfound(mas_symbol[0]);
          }
 
-        private void comparison(ref List<Variable> listStr, ref string[] mas_symbol, ref int i, ref int j, ref int temp)
+        private void comparison(ref List<Variable> listStr, ref string[] mas_symbol, ref int i, ref int j, ref int temp, ref Queue<int> Queue_lv)
         {
             if ((j < i) && (j != -1))
             {
@@ -238,38 +235,38 @@ namespace Translator
                     {
                         case "<":
                             {
-                                if (Convert.ToInt32(var1[0]) < Convert.ToInt32(var2[0])) i += 2;
-                                else i = temp;
+                                if (Convert.ToInt32(var1[0]) < Convert.ToInt32(var2[0])) i++;
+                                else { i = temp; Queue_lv.Dequeue(); }
                             }
                             break;
                         case "<=":
                             {
-                                if (Convert.ToInt32(var1[0]) <= Convert.ToInt32(var2[0])) i += 2;
-                                else i = temp;
+                                if (Convert.ToInt32(var1[0]) <= Convert.ToInt32(var2[0])) i++;
+                                else { i = temp; Queue_lv.Dequeue(); }
                             }
                             break;
                         case ">":
                             {
-                                if (Convert.ToInt32(var1[0]) > Convert.ToInt32(var2[0])) i += 2;
-                                else i = temp;
+                                if (Convert.ToInt32(var1[0]) > Convert.ToInt32(var2[0])) i++;
+                                else { i = temp; Queue_lv.Dequeue(); }
                             }
                             break;
                         case ">=":
                             {
-                                if (Convert.ToInt32(var1[0]) >= Convert.ToInt32(var2[0])) i += 2;
-                                else i = temp;
+                                if (Convert.ToInt32(var1[0]) >= Convert.ToInt32(var2[0])) i++;
+                                else { i = temp; Queue_lv.Dequeue(); }
                             }
                             break;
                         case "!=":
                             {
-                                if (Convert.ToInt32(var1[0]) != Convert.ToInt32(var2[0])) i += 2;
-                                else i = temp;
+                                if (Convert.ToInt32(var1[0]) != Convert.ToInt32(var2[0])) i++;
+                                else { i = temp; Queue_lv.Dequeue(); }
                             }
                             break;
                         case "==":
                             {
-                                if (Convert.ToInt32(var1[0]) == Convert.ToInt32(var2[0])) i += 2;
-                                else i = temp;
+                                if (Convert.ToInt32(var1[0]) == Convert.ToInt32(var2[0])) i++;
+                                else { i = temp; Queue_lv.Dequeue(); }
                             }
                             break;
                     }

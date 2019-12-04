@@ -37,7 +37,7 @@ namespace Translator
         List<string> identCondition = new List<string>() { "Если", "то", "иначе" };
         Error_class Error = new Error_class();
         Form1 Head = new Form1();
-        Stack<int> Stack_vl = new Stack<int>();
+        Queue<int> Queue_vl = new Queue<int>();
         List<Variable> listStr = new List<Variable>();
         /*---------------------------------------------------*/
 
@@ -53,7 +53,7 @@ namespace Translator
                     {
                         writeToken();
                         RunTime runtime = new RunTime();
-                        return runtime.Start(listStr, Head.Str_Write, Stack_vl);                        
+                        return runtime.Start(listStr, Head.Str_Write, Queue_vl);                        
                     }
             return Head.Str_Write;
         }
@@ -85,7 +85,6 @@ namespace Translator
         private int Search_Func_Main(string[] Text)
         {
             int k = 0;
-            int rang = 0;
             int rang2 = 0;
 
             foreach (string str in Text)
@@ -96,15 +95,8 @@ namespace Translator
                 k += matches.Count;
                 if (k > 0)
                 {
-                    rang = Check_Scob1(str, rang);
                     rang2 = Check_Scob2(str, rang2);
                 }
-            }
-
-            if (rang != 0)
-            {
-                Head.Str_Write += "Скобочная структура { } не верна.\n**********************\n";
-                return 0;
             }
 
             if (rang2 != 0)
@@ -118,24 +110,8 @@ namespace Translator
                 Head.Str_Write += "Не найдена главная функция.\n**********************\n";
                 return 0;
             }
-            else {
-                // listStr.Add(new string[] { "функция" , "Главная ()" });
-                //listStr.Add(new Variable { type = "функция" , value =  "Главная ()" });
-                return 1;
-            }
+            else return 1;
             
-        }
-
-        //функция проверки (подсчет) скобочной структуры {}
-        private int Check_Scob1(string str, int rang)
-        {
-            for (int i = 0; i < str.Length; i++)
-            {
-                if (str[i] == '{') rang++;
-                if (str[i] == '}') rang--;
-                if (rang < 0) break;
-            }
-            return rang;
         }
 
         //функция проверки (подсчет) скобочной структуры ()
@@ -167,17 +143,17 @@ namespace Translator
                         {
                             //проверка на выражение
                             if (!expression(str))
-                            {   
-                                switch (str) {
-                                    case "Главная (){":
-                                    case "\t{": 
-                                    case "{": { listStr.Add(new Variable { iD = "{" }/*new string[] { str }*/); } break;
-                                    case "\t}":
-                                    case "}": { listStr.Add(new Variable { iD = "}"}/*new string[] { str }*/); } break;
-                                    default: {
-                                            //if ((str != "") && (str != "\t") && (str != "\t\t") && !Head.listStr[0].Contains(str) )
-                                              //  Head.Str_Write += "Ошибка в строке: {" + str + " }\n";
-                                        } break;
+                            {
+                                string s = str.Trim(' ', '\t');
+                                switch (s) {
+                                    case "Главная ()":{ } break;
+                                    case "конец гланая":
+                                    case "конец для":
+                                        {
+                                            string[] mas_symbol = s.Split(' ');                                          
+                                            listStr.Add(new Variable { iD = s});
+                                        }
+                                        break;                                    
                                 }
                             }
                         }                        
@@ -320,7 +296,7 @@ namespace Translator
                         }
                         else Head.Str_Write += Error.Sintax_Error_For(mas_symbol[3]);
 
-                Stack_vl.Push(listStr.Count-1);
+                Queue_vl.Enqueue(listStr.Count-1);
                 return true;
             }
             //не найден
