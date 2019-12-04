@@ -144,16 +144,22 @@ namespace Translator
                             //проверка на выражение
                             if (!expression(str))
                             {
-                                string s = str.Trim(' ', '\t');
-                                switch (s) {
-                                    case "Главная ()":{ } break;
-                                    case "конец гланая":
-                                    case "конец для":
-                                        {
-                                            string[] mas_symbol = s.Split(' ');                                          
-                                            listStr.Add(new Variable { iD = s});
-                                        }
-                                        break;                                    
+                                if (!if_else(str))
+                                {
+                                    string s = str.Trim(' ', '\t');
+                                    switch (s)
+                                    {
+                                        case "Главная ()": { } break;
+                                        case "конец гланая":
+                                        case "конец для":
+                                        case "конец если":
+                                        case "конец иначе":
+                                            {
+                                                string[] mas_symbol = s.Split(' ');
+                                                listStr.Add(new Variable { iD = s });
+                                            }
+                                            break;
+                                    }
                                 }
                             }
                         }                        
@@ -335,6 +341,41 @@ namespace Translator
             //не найден
             return false;
         }         
+
+        //рроверка на условие
+        private bool if_else(string str)
+        {
+            //если ( П < Н )
+            //  П++
+            //конец если
+            //иначе 
+            // 
+            //конец иначе
+            str = str.Trim(' ','\t');
+            string[] mas_symbol = str.Split();
+            if (mas_symbol[0] == "если")
+            {
+                if (mas_symbol[1] == "(" && mas_symbol[5] == ")")
+                {
+
+                    listStr.Add(new Variable { iD = mas_symbol[0], value = mas_symbol[2] + " " + mas_symbol[3] + " " + mas_symbol[4] });
+                    return true;
+                }
+                else Head.Str_Write += Error.Sintax_Error_if_else(str);
+            }
+
+            if (mas_symbol[0] == "иначе")
+            {
+                if (mas_symbol.Length == 1)
+                {
+                    listStr.Add(new Variable { iD = mas_symbol[0] });
+                    return true;
+                }
+                else Head.Str_Write += Error.Sintax_Error_if_else(str);
+            }
+            //не найден
+            return false;
+        }
 
         private void writeToken()
         {

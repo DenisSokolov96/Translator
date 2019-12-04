@@ -93,9 +93,91 @@ namespace Translator
                         }
                         break;
                     case "если":
-                        {                            
+                        {
+                            string[] mas_symbol = listStr[i].value.Split(' ');
+                            string[] var1 = get_data(listStr, mas_symbol[0], i);
+                            string[] var2 = get_data(listStr, mas_symbol[2], i);
+                            switch(mas_symbol[1])
+                            {
+                                case ">":
+                                    {
+                                        if ((var1[1] == var2[1]) && (var1[1] == "цп" || var1[1] == "лп"))
+                                        {
+                                            //если не правильно
+                                            if (Convert.ToInt32(var1[0]) <= Convert.ToInt32(var2[0]))                                            
+                                                for (int j = i+1; j<listStr.Count; j++)                                                
+                                                    if (listStr[j].iD == "конец если")                                                    
+                                                        if (listStr[j + 1].iD == "иначе") { i = j + 1; break; }
+                                        }
+                                        else Error.Sintax_Error_Type();
+                                    }
+                                    break;
+                                case ">=":
+                                    {
+                                        if ((var1[1] == var2[1]) && (var1[1] == "цп" || var1[1] == "лп"))
+                                        {
+                                            //если не правильно
+                                            if (Convert.ToInt32(var1[0]) < Convert.ToInt32(var2[0]))
+                                                for (int j = i + 1; j < listStr.Count; j++)
+                                                    if (listStr[j].iD == "конец если")
+                                                        if (listStr[j + 1].iD == "иначе") { i = j + 1; break; }
+                                        }
+                                        else Error.Sintax_Error_Type();
+                                    }
+                                    break;
+                                case "<":
+                                    {
+                                        if ((var1[1] == var2[1]) && (var1[1] == "цп" || var1[1] == "лп"))
+                                        {
+                                            //если не правильно
+                                            if (Convert.ToInt32(var1[0]) >= Convert.ToInt32(var2[0]))
+                                                for (int j = i + 1; j < listStr.Count; j++)
+                                                    if (listStr[j].iD == "конец если")
+                                                        if (listStr[j + 1].iD == "иначе") { i = j + 1; break; }
+                                        }
+                                        else Error.Sintax_Error_Type();
+                                    }
+                                    break;
+                                case "<=":
+                                    {
+                                        if ((var1[1] == var2[1]) && (var1[1] == "цп" || var1[1] == "лп"))
+                                        {
+                                            //если не правильно
+                                            if (Convert.ToInt32(var1[0]) > Convert.ToInt32(var2[0]))
+                                                for (int j = i + 1; j < listStr.Count; j++)
+                                                    if (listStr[j].iD == "конец если")
+                                                        if (listStr[j + 1].iD == "иначе") { i = j + 1; break; }
+                                        }
+                                        else Error.Sintax_Error_Type();
+                                    }
+                                    break;
+                                case "==":
+                                    {
+                                        if ((var1[1] == var2[1]) && (var1[1] == "цп" || var1[1] == "лп"))
+                                        {
+                                            //если не правильно
+                                            if (Convert.ToInt32(var1[0]) != Convert.ToInt32(var2[0]))
+                                                for (int j = i + 1; j < listStr.Count; j++)
+                                                    if (listStr[j].iD == "конец если")
+                                                        if (listStr[j + 1].iD == "иначе") { i = j + 1; break; }
+                                        }
+                                        else Error.Sintax_Error_Type();
+                                    }
+                                    break;
+                            }
                         }
                         break;
+                    case "конец если":
+                        {
+                            if (listStr[i + 1].iD == "иначе")
+                            {
+                                for (int j = i + 2; j < listStr.Count; j++)
+                                    if (listStr[j].iD == "конец иначе") { i = j; break; }
+                            } 
+                        }
+                        break;
+                    case "иначе": { i++; } break;
+                    case "конец иначе":{}break;
                     default: { } break;
                 }
                 i++;

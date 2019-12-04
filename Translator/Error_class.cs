@@ -36,5 +36,9 @@ namespace Translator
         {
             return "Ошибка в строке: " + str + "\n";
         }
+        public string Sintax_Error_if_else(string str)
+        {
+            return "Ошибка в условии: " + str + "\n";
+        }
     }
 }
