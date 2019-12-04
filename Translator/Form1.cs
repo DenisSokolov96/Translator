@@ -13,14 +13,18 @@ namespace Translator
     public partial class Form1 : Form
     {
         /*---------------------------------------------------*/
-        public static bool Launcher_Prog = true;
-        public static string Str_Write = "";
+        public string Str_Write = "";
+        public static int Count_str_Read = 0;
+        public static string Str_Write_Programm = "";       
+        //список в момент выполнения
+        public static List<string[]> listRunTime = new List<string[]>();
+        //список для хранения ввода
+        public static List<string> listRead = new List<string>();
         /*---------------------------------------------------*/
 
         public Form1()
         {
             InitializeComponent();
-            richTextBox2.Enabled = false;
             /*******для теста****/
             richTextBox1.Text = System.IO.File.ReadAllText("D:\\Универ\\Компиляторы\\задача_Флавия.txt");
             richTextBox4.AppendText("Файл  <" + "D:\\Универ\\Компиляторы\\задача_Флавия.txt" + ">  загружен.\n");
@@ -34,10 +38,7 @@ namespace Translator
 
         private void выполнитьToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Launcher_Prog)
-            {
-                Start_Info();
-            }
+            Start_Info();            
         }
 
         private void richTextBox1_KeyDown(object sender, KeyEventArgs e)
@@ -45,29 +46,38 @@ namespace Translator
 
             switch (e.KeyCode)
             {
-                case Keys.F5: if (Launcher_Prog) Start_Info(); break;
+                case Keys.F5: Start_Info(); break;
                 case Keys.O: if (e.KeyCode == Keys.O && e.Control) OpenFile(); break;
                 case Keys.S: if (e.KeyCode == Keys.S && e.Control) SaveFile(); break;
             }
 
         }
-
+        
         private void Start_Info()
         {
-            Launcher_Prog = false;
-            richTextBox4.AppendText("Программа запущена на выполнение...\n");
+            Clear();
+
+            richTextBox4.AppendText("Программа запущена на выполнение...\n");            
+
 
             int I = richTextBox1.Lines.Length;
             string[] Text = new string[I];
 
             for (int i = 0; i < richTextBox1.Lines.Length; i++)               
                 Text[i] = richTextBox1.Lines[i];
-         
+
+
+            //считывание ввода
+            for (int i = 0; i < richTextBox2.Lines.Length; i++)
+                listRead.Add( richTextBox2.Lines[i] );            
+                
+
             //вызов класса для получения токенов (лексический анализ)
-            Lexical_Analysis Lexical_Class = new Lexical_Analysis();
-            Lexical_Class.Start_Analysis(Text);
-            richTextBox4.AppendText(Str_Write);           
-        }        
+            Lexical_Analysis Lexical_Class = new Lexical_Analysis();            
+
+            richTextBox4.AppendText(Lexical_Class.Start_Analysis(Text));
+            richTextBox3.AppendText(Str_Write_Programm);
+        }
 
         private void сохранитьФайлToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -95,12 +105,24 @@ namespace Translator
             string filename = saveFileDialog1.FileName;
             System.IO.File.WriteAllText(filename, richTextBox1.Text);
             MessageBox.Show("Файл сохранен");
-            richTextBox4.AppendText("Файл сохранен.\n");
+            richTextBox4.AppendText("Файл сохранен.\n");            
         }
 
         private void очиститьИнформациюToolStripMenuItem_Click(object sender, EventArgs e)
         {
             richTextBox4.Text = "";
         }
+
+        private void Clear()
+        {
+           Str_Write = "";
+           Count_str_Read = 0;
+           Str_Write_Programm = "";
+           listRunTime.Clear();
+           listRead.Clear();
+           richTextBox3.Clear();
+            //richTextBox2.Clear();
+        }
+
     }
 }

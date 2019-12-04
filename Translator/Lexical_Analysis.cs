@@ -30,30 +30,32 @@ namespace Translator
          * [изменение][счет][1]
          * [{]
          * [}]
-         */
-        List<string[]> listStr = new List<string[]>();
+         */      
         //списки для резервированных слов
         List<string> identPeremen = new List<string>() { "цп", "сп", "лп", "дп" };
         List<string> identReadWrite = new List<string>() { "вывод", "читать", "вывод" };
         List<string> identCondition = new List<string>() { "Если", "то", "иначе" };
-        //список для хранения токенов
-        List<string[]> listToken = new List<string[]>();
+        Error_class Error = new Error_class();
+        Form1 Head = new Form1();
+        Stack<int> Stack_vl = new Stack<int>();
+        List<Variable> listStr = new List<Variable>();
         /*---------------------------------------------------*/
 
 
-        public void Start_Analysis(string[] Text)
+        public string Start_Analysis(string[] Text)
         {
             //Обнуление строки информации
-            Form1.Str_Write = "";
+            Head.Str_Write = "";
 
-            //разрешение на перекомпиляцию
-            Form1.Launcher_Prog = true;
             if (Search_Programm(Text) == 1) //поиск - программа            
                 if (Search_Func_Main(Text) == 1) //поиск - главная функция                
-                    if (Read_Str_Text(Text) == 1)                    
-                        //запись в токен
-                        if (getMasToken()) writeToken();                                                    
-                        else Form1.Str_Write += "Ощибка получения токенов.\n";            
+                    if (Read_Str_Text(Text) == 1)
+                    {
+                        writeToken();
+                        RunTime runtime = new RunTime();
+                        return runtime.Start(listStr, Head.Str_Write, Stack_vl);                        
+                    }
+            return Head.Str_Write;
         }
 
         private int Search_Programm(string[] Text)
@@ -70,12 +72,12 @@ namespace Translator
 
             if (k != 1)
             {
-                Form1.Str_Write += "Неправильная конструкция: Программа <Имя>;\n**********************\n";
+                Head.Str_Write += "Неправильная конструкция: Программа <Имя>;\n**********************\n";
                 return 0;
             }
             else
             {
-                listStr.Add(new string[] { str_name });
+                //listStr.Add(new Variable { value = str_name });
                 return 1;
             };
         }
@@ -101,23 +103,24 @@ namespace Translator
 
             if (rang != 0)
             {
-                Form1.Str_Write += "Скобочная структура { } не верна.\n**********************\n";
+                Head.Str_Write += "Скобочная структура { } не верна.\n**********************\n";
                 return 0;
             }
 
             if (rang2 != 0)
             {
-                Form1.Str_Write += "Скобочная структура ( ) не верна.\n**********************\n";
+                Head.Str_Write += "Скобочная структура ( ) не верна.\n**********************\n";
                 return 0;
             }
 
             if (k != 1)
             {
-                Form1.Str_Write += "Не найдена главная функция.\n**********************\n";
+                Head.Str_Write += "Не найдена главная функция.\n**********************\n";
                 return 0;
             }
             else {
-                listStr.Add(new string[] { "функция" , "Главная ()" });
+                // listStr.Add(new string[] { "функция" , "Главная ()" });
+                //listStr.Add(new Variable { type = "функция" , value =  "Главная ()" });
                 return 1;
             }
             
@@ -169,11 +172,11 @@ namespace Translator
                                     case "\t{": 
                                     case "{":
                                     case "\t}":
-                                    case "}": { listStr.Add(new string[] { str }); } break;
-                                    case "Главная (){": { listStr.Add(new string[] { "{" }); } break;
+                                    case "}": { listStr.Add(new Variable { value = str}/*new string[] { str }*/); } break;
+                                    case "Главная (){": { listStr.Add(new Variable { value = "{" }/*new string[] { "{" }*/); } break;
                                     default: {
-                                            if ((str != "") && (str != "\t") && (str != "\t\t") && !listStr[0].Contains(str) )
-                                                Form1.Str_Write += "Ошибка в строке: {" + str + " }\n";
+                                            //if ((str != "") && (str != "\t") && (str != "\t\t") && !Head.listStr[0].Contains(str) )
+                                              //  Head.Str_Write += "Ошибка в строке: {" + str + " }\n";
                                         } break;
                                 }
                             }
@@ -191,7 +194,7 @@ namespace Translator
         private bool recognition(string str)
         {
             string[] mas = new string[] { @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(=(\s)*(-)?([0-9])+(\s)*(;))", @"[-]?([0-9])*",
-                                          @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(=(\s)*[']((\s)*(\w)*)*['](\s)*)", @"(\s)*[']((\s)*(\w)*)*['](\s)*",
+                                          @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(=(\s)*[""]((\s)*(\w)*)*[""](\s)*)", @"(\s)*[""]((\s)*(\w)*)*[""](\s)*",
                                           @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*=(\s)*правда|ложь(\s)*;", @"правда|ложь",
                                           @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*=(\s)*([0-9]+).([0-9]+)(\s)*;", @"([0-9]+).([0-9]+)"};
             string[] masNotChange = new string[] { @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(;)", @":(\s)*([А-Я]|[а-я])([А-Я]|[а-я]|[0-9])*" };
@@ -206,48 +209,28 @@ namespace Translator
                     MatchCollection matches2 = regex2.Matches(str);
                     if ((matches.Count > 0) || (matches2.Count > 0))
                     {
-                        //получаем тип своей переменной
-                        regex = new Regex(identPeremen[i]);
-                        matches = regex.Matches(str);
-                        string ident = matches[0].ToString();
-
-                        //получаем имя своей переменной
-                        regex = new Regex(masNotChange[1]);
-                        matches = regex.Matches(str);
-                        string name = matches[0].ToString();
-                        string sname = "";
-                        for (int j = 0; j < name.Length; j++)
-                            if ((name[j] != '\t') && (name[j] != ' ') && (name[j] != ':')) sname += name[j];
-                            else if (sname.Length != 0) break;
-
-                        //получаем значение своей переменной
-                        regex = new Regex(mas[i * 2 + 1]);
-                        matches = regex.Matches(str);
-                        if (matches.Count > 0)
+                        try
                         {
-                            bool f = false;
-                            for (int j = 0; j < matches.Count; j++)
-                                if (matches[j].ToString() != "")
-                                {
-                                    listStr.Add(new string[] { "id", ident, sname, matches[j].ToString() });
-                                    f = true;
+                            string[] mas_symbol = str.Split(':', ';', ' ', '\t');
+                            if (mas_symbol.Length > 6)
+                            {
+                                listStr.Add(new Variable {iD = "id", type = mas_symbol[1], name = mas_symbol[3], value = mas_symbol[5] });
+                                return true;
+                            }
+                            else if (mas_symbol.Length == 5)
+                                 {
+                                    if (mas_symbol[1]!= "сп") listStr.Add(new Variable { iD = "id", type = mas_symbol[1], name = mas_symbol[3], value = "0" });
+                                    else listStr.Add(new Variable { iD = "id", type = mas_symbol[1], name = mas_symbol[3], value = "" });
                                     return true;
-                                }
-                            if (f) break;
-                            switchStr(ref ident, ref sname);
-                            return true;
-
+                                 }
+                            else Head.Str_Write += Error.Sintax_Error_Iden(str);
+                            
                         }
-                        else {
-                            switchStr(ref ident, ref sname);
-                            return true;
-                        }                       
-
+                        catch { Head.Str_Write += Error.Sintax_Error_Iden(str); }
                     }
                 }
                 catch { }
             }
-
             //не найден
             return false;
         }
@@ -267,63 +250,27 @@ namespace Translator
 
                     if (matches.Count > 0)
                     {
-                        //получаем тип своей переменной
-                        regex = new Regex(identReadWrite[i]);
-                        matches = regex.Matches(str);
-                        string ident = matches[0].ToString();
-                                               
-                        //что выводить/читать
-                        regex = new Regex(mas[i * 2 + 1]);
-                        matches = regex.Matches(str);
-                        if (matches.Count > 0)
+                        try
                         {
-                            string maxStr = "";
-                            for (int k = 0; k < str.Length; k++)
+                            str = str.Trim(' ', '\t');
+                            string[] mas_symbol = str.Split('(', ')');
+                            for (int t = 0; t < mas_symbol.Length; t++)
+                                mas_symbol[t] = mas_symbol[t].Trim(' ');
+
+                            if (mas_symbol.Length == 3)
                             {
-                                string newStr = "";
-                                //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                //прокручиваем до переменной
-                                while ((str[k] == ' ') || (str[k] == '\t') || (str[k] == '('))
-                                {
-                                    if (k < str.Length)
-                                        k++;
-                                    else break;
+                                if (mas_symbol[0] == "читать") listStr.Add(new Variable { iD = mas_symbol[0], name = mas_symbol[1] });
+                                else
+                                {//вывод
+                                    string[] s = mas_symbol[1].Split('"');
+                                    if (s.Length>1) listStr.Add(new Variable { iD = mas_symbol[0], value = s[1] });
+                                    else listStr.Add(new Variable { iD = mas_symbol[0], name = mas_symbol[1] });
                                 }
-                                
-
-                                while ((k<str.Length) && (str[k] != ' ') && (str[k] != '+') && (str[k] != '-') && (str[k] != '*') && (str[k] != '/') && (str[k] != '%') && (str[k] != '\t') && (str[k] != ')') && (str[k] != '('))
-                                {
-                                    newStr += str[k];
-                                    k++;
-                                }
-                                maxStr += searchInList(newStr);
-                                if ((searchInList(newStr) == "")&&(maxStr.Length!=0)) maxStr += newStr;
-
-                                if (maxStr != "")
-                                {
-                                    //прокручиваем до переменной
-                                    while ((str[k] == ' ') || (str[k] == '\t') || (str[k] == '(') || (str[k] == ')'))
-                                    {
-                                        if (k < str.Length)
-                                            k++;
-                                        else break;
-                                    }
-                                    if ((str[k] == '+') || (str[k] == '-') || (str[k] == '*') || (str[k] == '/') || (str[k] == '%'))
-                                        maxStr += str[k]; 
-                                }
-
+                                return true;
                             }
-
-                            bool f = false;
-                            for (int j = 1; j < matches.Count; j++)
-                                if (matches[j].ToString() != "")
-                                {                                    
-                                    listStr.Add(new string[] { ident, maxStr });
-                                    f = true;
-                                    return true;
-                                }
-                            if (f) break;                            
+                            else Head.Str_Write += Error.Sintax_Error_RW(str);
                         }
+                        catch { Head.Str_Write += Error.Sintax_Error_RW(str); }                       
                     }
                 }
                 catch { }
@@ -335,124 +282,73 @@ namespace Translator
         private bool cycleFor(string str, in int i,in string[] Text)
         {
             //для ( цп: счет = 2; счет <= Н; счет++) 
-            Regex regex = new Regex(@"для(\s*)\((\s*)([А-Яа-я]*)(\s*):(\s*)[А-Яа-я]+(\w*)(\s*)=(\s*)[0-9]*(\s*);(\s*)[А-Яа-я]+(\w*)(\s*)(<=|>=|!=|==|<|>)+(\s*)[А-Яа-я]+(\w*)(\s*);((\s*)[А-Яа-я]+(\w*)\+\+|(\s*)[А-Яа-я]+(\w*)(\s*)(\+|\-|\*|/)=(\s*)([0-9]*|[А-Яа-я]+(\w*)))\)(\s*)(\{)?"); 
-            MatchCollection matches = regex.Matches(str);
-            if (matches.Count>0)
+            //[для][цп: счет = 2][счет <= Н][счет ++][ ]
+            str = str.Trim(' ', '\t');
+            string[] mas_symbol = str.Split('(', ')',';');
+            for (int t = 0; t < mas_symbol.Length; t++)
+                mas_symbol[t] = mas_symbol[t].Trim(' ');
+            if (mas_symbol[0]=="для")
             {
-                string cycle = matches[0].ToString();
-                listStr.Add(new string[] { "цикл", "для" });
-                if (!recognition(cycle)) Form1.Str_Write += "Ошибка в обьявлении переменной {"  + str + " }\n";
+                //[цп][счет][2]
+                string[] mas_id = mas_symbol[1].Split(':', '=');
+                if (mas_id.Length != 3) Head.Str_Write += Error.Sintax_Error_Iden(mas_symbol[1]);
+                for (int t = 0; t < mas_id.Length; t++)
+                    mas_id[t] = mas_id[t].Trim(' ');
 
-                regex = new Regex(@"[А-Яа-я]+(\w*)(\s*)(<=|>=|!=|==|<|>)+(\s*)[А-Яа-я]+(\w*)(\s*);");
-                matches = regex.Matches(cycle);
-                if (matches.Count > 0)
-                    cycle = matches[0].ToString();
-                else Form1.Str_Write += "Ошибка в обьявлении переменной {" + str + " }\n";
+                //[счет][<=][Н]
+                string[] mas_do = mas_symbol[2].Split(' ');
+                if (mas_do.Length != 3) Head.Str_Write += Error.Sintax_Error_For(mas_symbol[2]);
+                for (int t = 0; t < mas_do.Length; t++)
+                    mas_do[t] = mas_do[t].Trim(' ');
 
-                string sName = ""; //счет
-                string signСondition = ""; //<=
-                string sign = ""; //Н
-                for (int j = 0; j < cycle.Length; j++)
-                {
-                    if ((cycle[j] == '<') || (cycle[j] == '>') || (cycle[j] == '!') || (cycle[j] == '='))
-                    {                        
-                        for (int j2 = j; j2 < cycle.Length; j2++)
-                        {
-                            if ((cycle[j2] != '<') && (cycle[j2] != '>') && (cycle[j2] != '!') && (cycle[j2] != '='))
-                            {
-                                for (int j3 = j2; j3 < cycle.Length; j3++)
-                                    if (cycle[j3] != ';') { if (cycle[j3] != ' ') sign += cycle[j3]; }
-                                    else
-                                    {
-                                        listStr.Add(new string[] { "выполнение", sName, signСondition, sign });
-                                        break;
-                                    }
-                                break;
-                            }
-                            signСondition += cycle[j2];
-                        }
-                        break;
-                    }
-                    if (cycle[j]!=' ') sName += cycle[j];                    
-                }
-                regex = new Regex(@"((\s*)[А-Яа-я]+(\w*)\+\+|(\s*)[А-Яа-я]+(\w*)(\s*)(\+|\-|\*|/)=(\s*)([0-9]*|[А-Яа-я]+(\w*)))\)(\s*)(\{)?");
-                matches = regex.Matches(str);
-                if (matches.Count > 0)
-                    cycle = matches[0].ToString();
-                else Form1.Str_Write += "Ошибка в обьявлении переменной {" + str + " }\n";
+                //[счет][++] //[счет][=][счет][+][5/счет]
+                string[] mas_change = mas_symbol[3].Split(' ');
+                if ((mas_change.Length != 2)&&(mas_change.Length != 5)) Head.Str_Write += Error.Sintax_Error_Iden(mas_symbol[3]);
+                for (int t = 0; t < mas_change.Length; t++)
+                    mas_change[t] = mas_change[t].Trim(' ');
+                if (mas_change.Length == 2)
+                    //listStr.Add(new string[] { "для", mas_id[0], mas_id[1], mas_id[2], mas_do[0], mas_do[1], mas_do[2], mas_change[0], strToInt(mas_change[1]).ToString() });
+                    listStr.Add(new Variable { iD = "для", value = mas_id[0] + " " + mas_id[1] + " " + mas_id[2] + " " + mas_do[0] + " " + mas_do[1] + " " + mas_do[2] + " " + mas_change[0] + " " + strToInt(mas_change[1]).ToString() });
+                else if (mas_change.Length == 5)
+                    //listStr.Add(new string[] { "для", mas_id[0], mas_id[1], mas_id[2], mas_do[0], mas_do[1], mas_do[2], mas_change[0], mas_change[1], mas_change[2], mas_change[3], mas_change[4] });
+                    listStr.Add(new Variable { iD = "для", value = mas_id[0] + " " + mas_id[1] + " " + mas_id[2] + " " + mas_do[0] + " " + mas_do[1] + " " + mas_do[2] + " " + mas_change[0] + " " + mas_change[1] + " " + mas_change[2] + " " + mas_change[3] });
+                else Head.Str_Write += Error.Sintax_Error_For(mas_symbol[3]);
 
-                sName = "";
-                for (int j = 0; j < cycle.Length; j++)
-                {
-                    if ((cycle[j] == '+') || (cycle[j] == '-') || (cycle[j] == '*') || (cycle[j] == '/') ||  (cycle[j] == '='))
-                    {
-                        signСondition = "";
-                        for (int j2 = j; j2 < cycle.Length; j2++)
-                        {
-                            if ((cycle[j2] != '+') && (cycle[j2] != '-') && (cycle[j2] != '*') && (cycle[j2] != '=') && (cycle[j2] != '/'))
-                            {
-                                sign = "";
-                                for (int j3 = j2; j3 < cycle.Length; j3++)
-                                    if (cycle[j3] != ')') { if (cycle[j3] != ' ') sign += cycle[j3]; }
-                                    else
-                                    {
-                                        if (sign == "") listStr.Add(new string[] { "изменение", searchInList(sName), strToInt(in signСondition).ToString() });
-                                            else listStr.Add(new string[] { "изменение", sName, sign });
-                                        return true;
-                                    }
-                            }
-                            if (cycle[j2] != ' ') signСondition += cycle[j2];
-                        }
-                    }
-                    if (cycle[j] != ' ') sName += cycle[j]; 
-                }
-
+                Stack_vl.Push(listStr.Count);
+                return true;
             }
             //не найден
             return false;
         }
-
-        //поиск уже имеющихся в списке переменных
-        //для преобразования их в токен
-        private string searchInList(string str)
-        {           
-            int k = 0;
-            foreach (string[] s in listStr)
-            {
-                switch (s[0])
-                {
-                    case "id":
-                        {
-                            if (s[2] == str) return "(id, "+ k.ToString() +")";   
-                        }
-                        break;
-                }
-                k++;
-            }
-            return "";
-
-        }
+      
         //проверка на выражение
         private bool expression(string str)
         {
             //человек = (человек + К) % счет;
-            Regex regex = new Regex(@"(\s*)([А-Яа-я]+(\w*))(\s*)[(+=)(-=)(\*=)(/=)(=)]+(\s*)(\(?(\s*)[А-Яа-я]+(\w*)(\s*)[(+)(-)(*)(/)(%)]*(\s*)([А-Яа-я]+(\w*))*(\s*)\)?)*[(+)(-)(*)(/)(%)]*(\s*)([А-Яа-я]+(\w*))*(\s*);(\s*)");            
-            MatchCollection matches = regex.Matches(str);
-            if (matches.Count > 0)
+            str = str.Trim(' ', '\t',';');
+            string[] mas_symbol = str.Split(' ');
+            for (int t = 0; t < mas_symbol.Length; t++)
+                mas_symbol[t] = mas_symbol[t].Trim(' ');
+            if (mas_symbol[0] == "Б") { }
+            if (  ((mas_symbol.Length>1)&&( (mas_symbol[1] == "++") || (mas_symbol[1] == "--")))||(mas_symbol.Length > 2)   )
             {
-                string sName = "";
-                int i = 0;
-                while (i < str.Length)
+                //поиск объявляемых идентификаторов
+                for (int t = 0; t < identPeremen.Count; t++)
                 {
-                    if ((str[i] != '+') && (str[i] != '-') && (str[i] != '*') && (str[i] != '/') && (str[i] != '='))
+                    if (mas_symbol[0] == identPeremen[t])
                     {
-                        if (str[i] != ' ')  sName += str[i];
+                        recognition(str);
+                        return true;
                     }
-                    else break;
-                    i++;
                 }
-                //найден
-                return true;
+
+                //выражение [человек][=][(][человек][+][К][)][%][счет][;]
+                if ( (mas_symbol[1]=="=")||(mas_symbol[1] == "++")||(mas_symbol[1] == "--") )
+                {
+                    listStr.Add(new Variable { iD = "выражение", value = str });
+                    return true;
+                }
+                //все лишние символы не рассматриваем
             }
             //не найден
             return false;
@@ -466,221 +362,19 @@ namespace Translator
                 case "--": return -1;
             }
             return 0;
-        }
-
-        private void switchStr(ref string ident, ref string sname)
-        {
-            switch (ident)
-            {
-                case "цп": { listStr.Add(new string[] { "id", ident, sname, "0" }); } break;
-                case "сп": { listStr.Add(new string[] { "id", ident, sname, "''" }); } break;
-                case "лп": { listStr.Add(new string[] { "id", ident, sname, "ложь" }); } break;
-                case "дп": { listStr.Add(new string[] { "id", ident, sname, "0.0" }); } break;
-            }
-        }               
+        }             
 
         private void writeToken()
         {
-            Form1.Str_Write += "\nЛексический анализ (вывод токенов).\n";
-            Form1.Str_Write += "/********************************/\n";
+            Head.Str_Write += "\nВывод внутренних данных.\n";
+            Head.Str_Write += "/********************************/\n";
             //вывод токенов на экран
-            foreach (string[] str in listToken)
+            foreach (Variable aVar in listStr)
             {
-                for (int i = 0; i < str.Length; i++)
-                    switch (str[i])
-                    {
-                        case "id":
-                            {
-                                Form1.Str_Write += "(" + str[i] + ", " + str[i + 1] + ") ";
-                                i++;
-                            }
-                            break;
-                        case "читать":
-                            {                               
-                                Form1.Str_Write += str[i] + " (" + str[i + 1] + ", " + str[i + 2] + ") ";
-                                i = str.Length;
-                            }
-                            break;
-                        case "вывод":
-                            {
-                                Form1.Str_Write += str[i] + " ( " + str[i + 1] + " ) ";
-                                i = str.Length;
-                            }
-                            break;
-                        default: { Form1.Str_Write += str[i] + " "; } break;
-                    }
-
-                Form1.Str_Write += "\n";
+                Head.Str_Write += aVar.iD + " "+ aVar.type +" " + aVar.name + " " + aVar.value;
+                Head.Str_Write += "\n";                
             }
-            Form1.Str_Write += "/********************************/\n";
-            Form1.Str_Write += "Лексический анализ выполнен.\n\n";               
-           
-        }
-
-        
-        private bool getMasToken()
-        {
-            bool result = false;
-            int i = 0;
-
-            foreach (string[] str in listStr)
-            {
-                switch (str[0])
-                {
-                    case "id":
-                        {
-                            listToken.Add(new string[] { "id", i.ToString(), "=", str[3] });
-                        }
-                        break;
-                    case "вывод":
-                        {
-                            listToken.Add(new string[] { str[0], str[1] });
-                        }
-                        break;
-                    case "читать":
-                        {
-                            listToken.Add(new string[] { str[0], "id", changeIdent(str[1]) });
-                        }
-                        break;
-                    default: { if (str.Length==1) listToken.Add(new string[] { str[0] });
-                               if (str.Length == 2)  listToken.Add(new string[] { str[0] , str[1] });
-                               if (str.Length == 3) listToken.Add(new string[] { str[0], str[1], str[2] });
-                        } break;
-                }
-                i++;
-            }
-            result = true;
-
-
-            return result;
-        }
-
-        //метод для замены идентификаторов на обозначение (возможно это лишнее)
-        private string changeIdent(string s)
-        {
-            int j = 0;
-            foreach (string[] str in listStr)
-            {
-                for (int i = 0; i < str.Length; i++)
-                    if (str[i] == s)
-                    {
-                        return j.ToString();
-                    }
-                j++;
-            }
-            Form1.Str_Write += "Переменная не объявлена!\n";
-            return null;
-        }
-        /******************************************************дальше не нужные функции**********************************************************************/
-
-
-
-
-        //дочитать до конца строку идентификатора
-        private string idReadToEnd(in int i, string str)
-        {
-            string perem = "";
-            bool flag = false;
-            for (int j = i; j < str.Length; j++)
-            {
-                if ((str[j] != '\t') && (str[j] != ' ') && (str[j] != ';') && (str[j] != ':')) { perem += str[j]; flag = true; }
-                else if (flag)
-                {
-                    //надо дочитать до конца и выдать ошибку если найден любой символ кроме пробела
-                    flag = false;                                     
-                    j++;
-                    while (j < str.Length)
-                    {
-                        if (str[j] != ' ')
-                        {
-                            j = str.Length;
-                            //передача ошибки
-                            Form1.Str_Write += "Ошибка в строке, обнаружены лишние символы!\n";
-                        }
-                        j++;
-                    }
-                }
-            }
-            return perem;
-        }
-
-        //дочитать до конца строку ввода/вывода
-        private string rwReadToEnd(ref int i, string str )
-        {
-            string perem = "";
-            bool flag = false;
-            int rez = i;
-
-            int t = Check_Scob2(str,0);
-            if (t != 0)
-            {
-                Form1.Str_Write += "Нарушение скобочной структуры!\n";
-                return null;
-            }
-
-            while ((i + 1 < str.Length) && (str[i] != '"')) i++;
-            if (i + 1 < str.Length) i++;//чтобы взять следующий символ
-            else {
-                i = rez;
-                while ((i + 1 < str.Length) && (str[i] != '(')) i++;
-                if (i + 1 < str.Length) i++;//чтобы взять следующий символ
-            }
-
-            for (int j = i; j < str.Length; j++)
-            {        
-                if ((str[j] != '"') && (str[j] != '\n') && (str[j] != ';')) { perem += str[j]; flag = true; }
-                else if (flag)
-                {
-                    //надо дочитать до конца и выдать ошибку если найден ');'
-                    flag = false;
-                    j++;
-                    while (j < str.Length)
-                    {
-                        if (str[j] != ')')
-                        {
-                            while (j < str.Length)
-                            {
-                                if (str[j] != ';') j = str.Length;
-                                j++;
-                            }
-                        }
-                        j++;
-                    }
-                }
-            }
-            str = "";
-            for (int j = perem.Length - 1; j >= 0; j--)
-                if (perem[j] != ')') str += perem[j];
-                else { j = -1; str += ')'; }
-            if ((perem.Length - str.Length) != 0)
-                return perem.Substring(0, perem.Length - str.Length);
-            else return perem;
-
-        }
-        //дочитать до конца строку условие
-        //номер для дальнейшего считывания, вся строка и начало строки
-        private string conReadToEnd(int i, string str, ref string ident)
-        {
-            string perem = "";
-            if (ident == "Если")
-            {
-                for (; i < str.Length && str[i] == ' '; i++) { }                                              
-
-                for (int j = i; j < str.Length && str[j]!='\n' ; j++)
-                {
-                    perem += str[j];
-                }
-                return perem;
-            }
-            else {
-                for (; i < str.Length && str[i] == ' '; i++) { }
-
-                for (int j = i; j < str.Length && str[j] != '\n'; j++)
-                {
-                    perem += str[j];
-                }
-                return perem;
-            }               
+            Head.Str_Write += "/********************************/\n";
         }        
     }
 }
