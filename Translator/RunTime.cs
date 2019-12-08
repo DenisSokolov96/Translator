@@ -44,13 +44,17 @@ namespace Translator
                         break;
                     case "читать":
                         {
-                            int j = listStr.FindIndex(x => x.name == listStr[i].name);
-                            if (j < i)
+                            try
                             {
-                                listStr[j].value = Form1.listRead[Form1.Count_str_Read];
-                                Form1.Count_str_Read++;
+                                int j = listStr.FindIndex(x => x.name == listStr[i].name);
+                                if (j < i)
+                                {
+                                    listStr[j].value = Form1.listRead[Form1.Count_str_Read];
+                                    Form1.Count_str_Read++;
+                                }
+                                else Str_Write += Error.Sintax_Error_Var_notfound(listStr[i].name + " " + listStr[i].value);
                             }
-                            else Str_Write += Error.Sintax_Error_Var_notfound(listStr[i].name + " " + listStr[i].value);
+                            catch { Str_Write += Error.Sintax_Error_RW(listStr[i].iD + " "+ listStr[i].name); }
                         }
                         break;
                     case "для":
@@ -160,13 +164,17 @@ namespace Translator
 
             if (k != -1)
                 if (k < i)
-                    switch (listStr[k].type)
+                    try
                     {
-                        case "цп": str[0] = Convert.ToInt32(listStr[k].value).ToString(); str[1] = "цп"; break;
-                        case "дп": str[0] = Convert.ToDouble(listStr[k].value).ToString(); str[1] = "дп"; break;
-                        case "сп": str[0] = listStr[k].value; str[1] = "сп"; break;
-                        case "лп": str[0] = listStr[k].value; str[1] = "лп"; break;
+                        switch (listStr[k].type)
+                        {
+                            case "цп": str[0] = Convert.ToInt32(listStr[k].value).ToString(); str[1] = "цп"; break;
+                            case "дп": str[0] = Convert.ToDouble(listStr[k].value).ToString(); str[1] = "дп"; break;
+                            case "сп": str[0] = listStr[k].value; str[1] = "сп"; break;
+                            case "лп": str[0] = listStr[k].value; str[1] = "лп"; break;
+                        }
                     }
+                    catch { Str_Write += Error.Sintax_Error_expression(listStr[k].type); }
                 else Str_Write += Error.Sintax_Error_Var_notfound(listStr[i].value);
             else
             {

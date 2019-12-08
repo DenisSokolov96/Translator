@@ -51,7 +51,7 @@ namespace Translator
                 if (Search_Func_Main(Text) == 1) //поиск - главная функция                
                     if (Read_Str_Text(Text) == 1)
                     {
-                        writeToken();
+                        //writeToken();
                         RunTime runtime = new RunTime();
                         return runtime.Start(listStr, Head.Str_Write, Queue_vl);                        
                     }
