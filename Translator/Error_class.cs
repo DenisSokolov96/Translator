@@ -40,5 +40,13 @@ namespace Translator
         {
             return "Ошибка в условии: " + str + "\n";
         }
+        public string Sintax_Error_Not_Cycle(string str)
+        {
+            return "Цикл не найден: " + str + "\n";
+        }
+        public string Sintax_Error_Text(string str)
+        {
+            return "Найден не распознаный текст: " + str + "\n";
+        }
     }
 }

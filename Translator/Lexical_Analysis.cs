@@ -150,7 +150,7 @@ namespace Translator
                                     switch (s)
                                     {
                                         case "Главная ()": { } break;
-                                        case "конец гланая":
+                                        case "конец главная":
                                         case "конец для":
                                         case "конец если":
                                         case "конец иначе":
@@ -159,6 +159,14 @@ namespace Translator
                                                 listStr.Add(new Variable { iD = s });
                                             }
                                             break;
+                                        case "\t":
+                                        case " ":
+                                        case "":
+                                        case "\n": break;
+                                        default: {
+                                                string[] s2 = s.Split(' ');
+                                                if (s2.Length > 0 && s2[0] == "Программа") { }
+                                                else Head.Str_Write += Error.Sintax_Error_Text(s); }break;
                                     }
                                 }
                             }

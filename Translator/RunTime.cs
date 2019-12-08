@@ -85,25 +85,29 @@ namespace Translator
                         break;
                     case "конец для":
                         {
-                            int temp = i;
-                            i = Queue_vl.Peek();
-                            if (i == -1)  i = temp; 
-                            else
+                            try
                             {
-                                //увеличть значение в цикле
-                                string str = listStr[i].value.Trim(' ', '\t');
-                                string[] mas_symbol = str.Split(' ');
-                                for (int t = 0; t < mas_symbol.Length; t++)
-                                    mas_symbol[t] = mas_symbol[t].Trim(' ');
+                                int temp = i;
+                                i = Queue_vl.Peek();
+                                if (i == -1) i = temp;
+                                else
+                                {
+                                    //увеличть значение в цикле
+                                    string str = listStr[i].value.Trim(' ', '\t');
+                                    string[] mas_symbol = str.Split(' ');
+                                    for (int t = 0; t < mas_symbol.Length; t++)
+                                        mas_symbol[t] = mas_symbol[t].Trim(' ');
 
-                                int j = listStr.FindIndex(x => x.name == mas_symbol[0]);
-                                check_on_equality(ref j, ref listStr, ref mas_symbol, ref str, ref i);
-                                //сравнение
-                                i--;
-                                mas_symbol = listStr[i].value.Split(' ');
-                                j = listStr.FindIndex(x => x.name == mas_symbol[0]);
-                                comparison(ref listStr, ref mas_symbol, ref i, ref j, ref temp, ref Queue_vl);
+                                    int j = listStr.FindIndex(x => x.name == mas_symbol[0]);
+                                    check_on_equality(ref j, ref listStr, ref mas_symbol, ref str, ref i);
+                                    //сравнение
+                                    i--;
+                                    mas_symbol = listStr[i].value.Split(' ');
+                                    j = listStr.FindIndex(x => x.name == mas_symbol[0]);
+                                    comparison(ref listStr, ref mas_symbol, ref i, ref j, ref temp, ref Queue_vl);
+                                }
                             }
+                            catch { Str_Write += Error.Sintax_Error_Not_Cycle(listStr[i].iD); }
                         }
                         break;
                     case "если":
