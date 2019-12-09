@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Translator
 {
@@ -22,6 +23,7 @@ namespace Translator
                 {
                     case "вывод":
                         {
+                            
                             int j = listStr.FindIndex(x => ((x.name == listStr[i].name) && (x.name != null)));
                             if ((j < i) && (j != -1))
                             {
@@ -35,19 +37,22 @@ namespace Translator
                                 }
                                 else Form1.Str_Write_Programm += listStr[j].value + "\n";
                             }
-                            else if (listStr[i].value != "")
+                            else if (listStr[i].value != null)
                             {
                                 Form1.Str_Write_Programm += listStr[i].value + "\n";
                             }
                             else Str_Write += Error.Sintax_Error_Var_notfound(listStr[i].name + " " + listStr[i].value);
+
+                           
                         }
                         break;
                     case "читать":
                         {
+                           
                             try
                             {
-                                int j = listStr.FindIndex(x => x.name == listStr[i].name);
-                                if (j < i)
+                                int j = listStr.FindIndex(x => x.name == listStr[i].name );
+                                if ( (j < i)&& (j!=-1) )
                                 {
                                     listStr[j].value = Form1.listRead[Form1.Count_str_Read];
                                     Form1.Count_str_Read++;
@@ -76,12 +81,19 @@ namespace Translator
                             }
                         }
                         break;
-                    case "выражение"://нет скобочной структуры, а так же выражеия только с одним знаком
+                    case "выражение":
                         {
                             string str = listStr[i].value.Trim(' ', '\t');
                             string[] mas_symbol = str.Split(' ');
+                            int k = 0;
                             for (int t = 0; t < mas_symbol.Length; t++)
+                            {
                                 mas_symbol[t] = mas_symbol[t].Trim(' ');
+                                if (mas_symbol[t] == ";") k++;
+                            }
+                           // if (k!=1) Str_Write += Error.Sintax_Error_TZ(listStr[i].iD + " " + listStr[i].name);
+
+
 
                             int j = listStr.FindIndex(x => x.name == mas_symbol[0]);
                             check_on_equality(ref j,ref listStr,ref mas_symbol, ref str,ref i); 
@@ -172,6 +184,7 @@ namespace Translator
                             case "дп": str[0] = Convert.ToDouble(listStr[k].value).ToString(); str[1] = "дп"; break;
                             case "сп": str[0] = listStr[k].value; str[1] = "сп"; break;
                             case "лп": str[0] = listStr[k].value; str[1] = "лп"; break;
+                            default: str[0] = "0"; str[1] = "цп"; break;
                         }
                     }
                     catch { Str_Write += Error.Sintax_Error_expression(listStr[k].type); }
@@ -266,7 +279,7 @@ namespace Translator
             if ((j < i) && (j != -1))
             {
                 string[] var1 = get_data(listStr, mas_symbol[0], i);
-                string[] var2 = get_data(listStr, mas_symbol[2], i);
+                string[] var2 = get_data(listStr, mas_symbol[2], i);               
                 try
                 {
                     switch (mas_symbol[1])

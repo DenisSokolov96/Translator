@@ -25,10 +25,10 @@ namespace Translator
         public Form1()
         {
             InitializeComponent();
-            /*******для теста***
+            /*******для теста***/
             richTextBox1.Text = System.IO.File.ReadAllText("D:\\Универ\\Компиляторы\\задача_Флавия.txt");
             richTextBox4.AppendText("Файл  <" + "D:\\Универ\\Компиляторы\\задача_Флавия.txt" + ">  загружен.\n");
-            *********///10 3 данные
+            /*********///10 3 данные
         }
 
         private void Form1_Load(object sender, EventArgs e)

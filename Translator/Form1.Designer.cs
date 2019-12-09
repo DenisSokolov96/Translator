@@ -118,7 +118,7 @@
             this.richTextBox2.Name = "richTextBox2";
             this.richTextBox2.Size = new System.Drawing.Size(570, 85);
             this.richTextBox2.TabIndex = 2;
-            this.richTextBox2.Text = "";
+            this.richTextBox2.Text = "10\n3";
             // 
             // richTextBox3
             // 

@@ -30,6 +30,7 @@ namespace Translator
          * [изменение][счет][1]
          * [{]
          * [}]
+         * ; важные только при объявлении переменных, а остальные нет
          */      
         //списки для резервированных слов
         List<string> identPeremen = new List<string>() { "цп", "сп", "лп", "дп" };
@@ -183,11 +184,11 @@ namespace Translator
         //поиск обьявления переменных
         private bool recognition(string str)
         {
-            string[] mas = new string[] { @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(=(\s)*(-)?([0-9])+(\s)*(;))", @"[-]?([0-9])*",
-                                          @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(=(\s)*[""]((\s)*(\w)*)*[""](\s)*)", @"(\s)*[""]((\s)*(\w)*)*[""](\s)*",
-                                          @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*=(\s)*правда|ложь(\s)*;", @"правда|ложь",
-                                          @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*=(\s)*([0-9]+).([0-9]+)(\s)*;", @"([0-9]+).([0-9]+)"};
-            string[] masNotChange = new string[] { @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я]||[0-9])*)*(\s)*(;)", @":(\s)*([А-Я]|[а-я])([А-Я]|[а-я]|[0-9])*" };
+            string[] mas = new string[] { @"(\s)*:(\s)*([А-Я]||[а-я])(([А-Я]||[а-я])*)*(\s)*(=(\s)*(-)?([0-9])+(\s)*(;))", @"[-]?([0-9])*",
+                                          @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я])*)*(\s)*(=(\s)*[""]((\s)*(\w)*)*[""](\s)*)", @"(\s)*[""]((\s)*(\w)*)*[""](\s)*",
+                                          @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я])*)*(\s)*=(\s)*правда|ложь(\s)*;", @"правда|ложь",
+                                          @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я])*)*(\s)*=(\s)*([0-9]+).([0-9]+)(\s)*;", @"([0-9]+).([0-9]+)"};
+            string[] masNotChange = new string[] { @"(\s*):(\s*)([А-Я]||[а-я])(([А-Я]||[а-я])*)*(\s)*(;)", @":(\s)*([А-Я]|[а-я])([А-Я]|[а-я])*" };
             for (int i = 0; i < identPeremen.Count; i++)
             {
                 try
@@ -253,8 +254,11 @@ namespace Translator
                                 else
                                 {//вывод
                                     string[] s = mas_symbol[1].Split('"');
-                                    if (s.Length>1) listStr.Add(new Variable { iD = mas_symbol[0], value = s[1] });
-                                    else listStr.Add(new Variable { iD = mas_symbol[0], name = mas_symbol[1] });
+                                    if (s.Length==1) listStr.Add(new Variable { iD = mas_symbol[0], name = mas_symbol[1] });
+                                    else 
+                                        if (s.Length == 3) listStr.Add(new Variable { iD = mas_symbol[0], value = s[1] });
+                                           else  Head.Str_Write += Error.Sintax_Error_RW(str);
+                                    
                                 }
                                 return true;
                             }
@@ -296,20 +300,23 @@ namespace Translator
                 if ((mas_change.Length != 2)&&(mas_change.Length != 5)) Head.Str_Write += Error.Sintax_Error_Iden(mas_symbol[3]);
                 for (int t = 0; t < mas_change.Length; t++)
                     mas_change[t] = mas_change[t].Trim(' ');
-                if (mas_change.Length == 2)
+                try
                 {
-                    listStr.Add(new Variable { iD = "для", type = mas_id[0], name = mas_id[1], value = mas_id[2] });
-                    listStr.Add(new Variable { iD = "для", value = mas_do[0] + " " + mas_do[1] + " " + mas_do[2] });
-                    listStr.Add(new Variable { iD = "для", value = mas_change[0] + " " + mas_change[1] });
+                    if (mas_change.Length == 2)
+                    {
+                        listStr.Add(new Variable { iD = "для", type = mas_id[0], name = mas_id[1], value = mas_id[2] });
+                        listStr.Add(new Variable { iD = "для", value = mas_do[0] + " " + mas_do[1] + " " + mas_do[2] });
+                        listStr.Add(new Variable { iD = "для", value = mas_change[0] + " " + mas_change[1] });
+                    }
+                    else if (mas_change.Length == 5)
+                    {
+                        listStr.Add(new Variable { iD = "для", type = mas_id[0], name = mas_id[1], value = mas_id[2] });
+                        listStr.Add(new Variable { iD = "для", value = mas_do[0] + " " + mas_do[1] + " " + mas_do[2] });
+                        listStr.Add(new Variable { iD = "для", value = mas_change[0] + " " + mas_change[1] + " " + mas_change[2] + " " + mas_change[3] + " " + mas_change[4] });
+                    }
+                    else Head.Str_Write += Error.Sintax_Error_For(mas_symbol[3]);
                 }
-                else if (mas_change.Length == 5)
-                        {
-                            listStr.Add(new Variable { iD = "для", type = mas_id[0], name = mas_id[1], value = mas_id[2] });
-                            listStr.Add(new Variable { iD = "для", value = mas_do[0] + " " + mas_do[1] + " " + mas_do[2] });
-                            listStr.Add(new Variable { iD = "для", value = mas_change[0] + " " + mas_change[1] + " " + mas_change[2] + " " + mas_change[3] + " " + mas_change[4] });
-                        }
-                        else Head.Str_Write += Error.Sintax_Error_For(mas_symbol[3]);
-
+                catch { Head.Str_Write += Error.Sintax_Error_Not_Cycle(str); }
                 Queue_vl.Enqueue(listStr.Count-1);
                 return true;
             }
@@ -321,7 +328,7 @@ namespace Translator
         private bool expression(string str)
         {
             //человек = (человек + К) % счет;
-            str = str.Trim(' ', '\t',';');
+            str = str.Trim(' ', '\t', ';');
             string[] mas_symbol = str.Split(' ');
             for (int t = 0; t < mas_symbol.Length; t++)
                 mas_symbol[t] = mas_symbol[t].Trim(' ');

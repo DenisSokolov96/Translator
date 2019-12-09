@@ -46,7 +46,11 @@ namespace Translator
         }
         public string Sintax_Error_Text(string str)
         {
-            return "Найден не распознаный текст: " + str + "\n";
+            return "Найден не распознанный текст: " + str + "\n";
+        }
+        public string Sintax_Error_TZ(string str)
+        {
+            return "Ошибка с запятой:"+str+"\n";
         }
     }
 }
